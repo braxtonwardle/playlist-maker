@@ -1,0 +1,80 @@
+{
+  "_readme": "Fill in sourcePlaylistId for every bucket and targetPlaylistId for morning/night with real Spotify playlist IDs (the string in a playlist's share link: open.spotify.com/playlist/<ID>). seedSongs are just a reminder of the spec's starter suggestions for that bucket's source playlist — the script does not read them.",
+  "noRepeatWindow": 3,
+  "morning": {
+    "targetPlaylistId": "",
+    "buckets": [
+      {
+        "name": "Wake / Cinematic",
+        "sourcePlaylistId": "",
+        "songCount": 2,
+        "seedSongs": ["Time", "Day One", "Albatross"]
+      },
+      {
+        "name": "Groove / Getting moving",
+        "sourcePlaylistId": "",
+        "songCount": 3,
+        "seedSongs": ["Dean Town", "Back Pocket", "Khruangbin"]
+      },
+      {
+        "name": "Warm / Easy",
+        "sourcePlaylistId": "",
+        "songCount": 3,
+        "seedSongs": ["Dreams", "Reckoner", "Olivia Dean"]
+      },
+      {
+        "name": "Building energy",
+        "sourcePlaylistId": "",
+        "songCount": 4,
+        "seedSongs": ["Freedom", "Get Lucky", "Jungle"]
+      },
+      {
+        "name": "Full send / Fun",
+        "sourcePlaylistId": "",
+        "songCount": 4,
+        "seedSongs": ["SAOKO", "Titi Me Preguntó", "Pink Pony Club"]
+      }
+    ]
+  },
+  "night": {
+    "targetPlaylistId": "",
+    "buckets": [
+      {
+        "name": "Soft landing",
+        "sourcePlaylistId": "",
+        "songCount": 3,
+        "seedSongs": ["Songbird", "Landslide", "Fade Into You", "Into Dust", "Show Me How"]
+      },
+      {
+        "name": "Reflective / emotional",
+        "sourcePlaylistId": "",
+        "songCount": 3,
+        "seedSongs": ["Holocene", "Re: Stacks", "Should Have Known Better", "Messy", "Heartbeats"]
+      },
+      {
+        "name": "Deepening / atmospheric",
+        "sourcePlaylistId": "",
+        "songCount": 3,
+        "seedSongs": ["Pyramid Song", "Weird Fishes", "Everything In Its Right Place", "Eventually"]
+      },
+      {
+        "name": "Instrumental descent",
+        "sourcePlaylistId": "",
+        "songCount": 5,
+        "seedSongs": ["S.T.A.Y.", "No Time for Caution", "Says", "Everything Connected"]
+      },
+      {
+        "name": "Reading / journaling",
+        "sourcePlaylistId": "",
+        "openEnded": true,
+        "seedSongs": [
+          "Nils Frahm - Hammers",
+          "Ólafur Arnalds - Near Light",
+          "Max Richter - On the Nature of Daylight",
+          "Brian Eno - 1/1 (Music for Airports)",
+          "Kohto - [track TBD]"
+        ]
+      }
+    ]
+  }
+}

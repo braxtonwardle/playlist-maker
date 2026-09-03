@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from soundtrack_engine.config import Config, Progression, Stage, load_config
+from soundtrack_engine.config import Config, GeneratorSettings, Progression, Stage, load_config
 
 EXAMPLE_CONFIG_PATH = Path(__file__).parent.parent / "config" / "config.example.yaml"
 
@@ -11,17 +11,25 @@ EXAMPLE_CONFIG_PATH = Path(__file__).parent.parent / "config" / "config.example.
 def test_load_example_config() -> None:
     config = load_config(EXAMPLE_CONFIG_PATH)
 
-    assert config.no_repeat_days == 15
+    assert config.generator.no_repeat_days == 15
+    assert config.generator.duration_tolerance_minutes == 2
     assert set(config.progressions) == {"morning", "night"}
     assert len(config.progressions["morning"].stages) == 5
     assert len(config.progressions["night"].stages) == 5
 
 
-def test_example_config_stage_names_and_order() -> None:
+def test_example_config_stage_ids_and_names_in_order() -> None:
     config = load_config(EXAMPLE_CONFIG_PATH)
 
-    morning_names = [stage.name for stage in config.progressions["morning"].stages]
-    assert morning_names == [
+    morning_stages = config.progressions["morning"].stages
+    assert [s.id for s in morning_stages] == [
+        "wake_cinematic",
+        "groove",
+        "warm",
+        "building_energy",
+        "full_send_fun",
+    ]
+    assert [s.name for s in morning_stages] == [
         "Wake / Cinematic",
         "Groove / Getting moving",
         "Warm / Easy",
@@ -29,8 +37,9 @@ def test_example_config_stage_names_and_order() -> None:
         "Full send / Fun",
     ]
 
-    night_names = [stage.name for stage in config.progressions["night"].stages]
-    assert night_names[-1] == "Reading / journaling"
+    night_stages = config.progressions["night"].stages
+    assert night_stages[-1].id == "reading_journaling"
+    assert night_stages[-1].name == "Reading / journaling"
 
 
 def test_night_reading_stage_is_open_ended_with_no_duration() -> None:
@@ -48,17 +57,22 @@ def test_load_config_missing_file_raises() -> None:
 
 def test_stage_requires_duration_unless_open_ended() -> None:
     with pytest.raises(ValidationError):
-        Stage(name="No duration, not open-ended")
+        Stage(id="wake", name="No duration, not open-ended")
 
 
 def test_stage_open_ended_rejects_duration() -> None:
     with pytest.raises(ValidationError):
-        Stage(name="Both set", open_ended=True, target_minutes=10)
+        Stage(id="both_set", name="Both set", open_ended=True, target_minutes=10)
 
 
 def test_stage_rejects_non_positive_duration() -> None:
     with pytest.raises(ValidationError):
-        Stage(name="Zero minutes", target_minutes=0)
+        Stage(id="zero_minutes", name="Zero minutes", target_minutes=0)
+
+
+def test_stage_rejects_invalid_id() -> None:
+    with pytest.raises(ValidationError):
+        Stage(id="Not Snake Case!", name="Bad id", target_minutes=5)
 
 
 def test_progression_requires_at_least_one_stage() -> None:
@@ -66,17 +80,22 @@ def test_progression_requires_at_least_one_stage() -> None:
         Progression(output_playlist_name="Empty", stages=[])
 
 
-def test_config_requires_positive_no_repeat_days() -> None:
+def test_progression_rejects_duplicate_stage_ids() -> None:
     with pytest.raises(ValidationError):
-        Config(
-            no_repeat_days=0,
-            progressions={
-                "morning": Progression(
-                    output_playlist_name="Today's Morning",
-                    stages=[Stage(name="Wake", target_minutes=8)],
-                )
-            },
+        Progression(
+            output_playlist_name="Dupes",
+            stages=[
+                Stage(id="wake", name="Wake", target_minutes=8),
+                Stage(id="wake", name="Wake Again", target_minutes=8),
+            ],
         )
+
+
+def test_generator_settings_reject_non_positive_values() -> None:
+    with pytest.raises(ValidationError):
+        GeneratorSettings(no_repeat_days=0)
+    with pytest.raises(ValidationError):
+        GeneratorSettings(duration_tolerance_minutes=0)
 
 
 def test_config_requires_at_least_one_progression() -> None:

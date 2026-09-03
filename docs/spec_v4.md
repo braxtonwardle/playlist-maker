@@ -81,16 +81,66 @@ room. Instrumental descent should begin roughly 30–32 minutes in.
 
 ## Anchor Songs Per Stage
 
-Starting points to seed each stage's pool — expand each to 40–100+ songs over time. Songs
-marked (validated) were confirmed to work well in an actual generated playlist test run;
-everything else is a suggestion to curate/cut freely, not a verified fit. See
-[`config/config.example.yaml`](../config/config.example.yaml) for the full list as
-`seed_songs` per stage.
+Starting points to seed each stage's pool by hand directly in Spotify — expand each to
+40–100+ songs over time. Songs marked (validated) were confirmed to work well in an
+actual generated playlist test run; everything else is a suggestion to curate/cut freely,
+not a verified fit. These are reference material only — config never lists songs; see
+"Config only holds structure, not songs" below.
 
-Note: Morning hasn't been test-run yet (unlike Night) — treat that bucket set as
-first-draft until heard in practice.
+### MORNING
+
+1. **Wake / Cinematic** — Time (Hans Zimmer), Day One (Hans Zimmer), Albatross
+   (Fleetwood Mac), Cornfield Chase (Hans Zimmer), Mountains (Hans Zimmer), Motion
+   Picture Soundtrack (Radiohead)
+2. **Groove / Getting moving** — Dean Town (Vulfpeck), Back Pocket (Vulfpeck), 1612
+   (Vulfpeck), Khruangbin tracks (e.g. Maria También, Friday Morning), Cómo Se Siente
+   (Rosalía)
+3. **Warm / Easy** — Dreams (Fleetwood Mac), Reckoner (Radiohead), The Chain (Fleetwood
+   Mac), Olivia Dean tracks (Messy, No Man, Dive), Work Song (Hozier)
+4. **Building energy** — Freedom (Pharrell), Get Lucky (Daft Punk), Instant Crush (Daft
+   Punk), Jungle tracks (Busy Earnin', Happy Man), Redbone (Childish Gambino), Feels Like
+   Summer (Childish Gambino)
+5. **Full send / Fun** — SAOKO (Rosalía), Titi Me Preguntó (Bad Bunny), Pink Pony Club
+   (Chappell Roan), Callaíta (Bad Bunny), Good Luck, Babe! (Chappell Roan), Me Porto
+   Bonito (Bad Bunny)
+
+Morning hasn't been test-run yet (unlike Night) — treat this stage set as first-draft
+until heard in practice.
+
+### NIGHT
+
+No big-energy stage anywhere — arc winds down the whole way, never builds back up.
+
+1. **Soft landing** (very gentle, intimate, low stimulation) — Songbird (Fleetwood Mac),
+   Landslide (Fleetwood Mac), Fade Into You (Mazzy Star), Into Dust (Mazzy Star), Show Me
+   How (Lauv), Futile Devices (validated), To Be Alone With You (validated), Butterflies
+   feat. AURORA (validated), Naked as We Came (validated)
+2. **Reflective / emotional** (still chill, enough movement for a wind-down routine) —
+   Holocene (Bon Iver), Re: Stacks (Bon Iver), Should Have Known Better (Sufjan Stevens,
+   validated), Messy (Olivia Dean), Heartbeats (The Knife), Stay Alive (validated)
+3. **Deepening / atmospheric** (more texture, transitioning toward bed) — Pyramid Song
+   (Radiohead, validated), Weird Fishes (Radiohead), Everything In Its Right Place
+   (Radiohead), Eventually (Tame Impala), Nude (Radiohead, validated), Shrike (Hozier,
+   validated), Glass Eyes (validated)
+4. **Instrumental descent** (no lyrics, increasingly ambient/meditative) — S.T.A.Y. (Hans
+   Zimmer, validated), No Time for Caution (Hans Zimmer), Says (Nils Frahm), Cornfield
+   Chase (Hans Zimmer, validated), Everything Connected (Jordan Rakei)
+5. **Reading / journaling** (pure instrumental/ambient, very low cognitive demand) — #19
+   (Nils Frahm, validated), 1/1 – Music for Airports (Brian Eno, validated), 1/2 (Brian
+   Eno, validated), 2/2 (Brian Eno, validated), A Lovely Place to Be (Ólafur Arnalds,
+   validated), Silence – Instrumental (validated), By This River – Phantom (Nils Frahm,
+   validated), Hægt kemur ljósið (Sigur Rós, validated), Þú ert jörðin (validated), As a
+   Reminder (Nils Frahm, validated), Near Light (Ólafur Arnalds), On the Nature of
+   Daylight (Max Richter)
 
 Kohto — still needs specific track title(s) added; not yet resolved.
+
+## Config only holds structure, not songs
+
+`config/config.example.yaml` defines playlist ids, stage order, durations, and generator
+settings (`no_repeat_days`, `duration_tolerance_minutes`) — never song lists. Spotify is
+the source of truth for what's actually in a stage's pool: add/remove songs directly in
+the source playlists on Spotify, using the anchor songs above as a starting point.
 
 ## Development Skeleton — MVP scope (build these)
 

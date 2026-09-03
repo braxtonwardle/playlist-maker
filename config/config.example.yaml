@@ -2,12 +2,16 @@
 # output_playlist_id with real Spotify playlist IDs (the string in a playlist's
 # share link: open.spotify.com/playlist/<ID>).
 #
-# seed_songs are documentation only — starting suggestions for curating each
-# stage's source playlist by hand. The engine never reads them; only the
-# source playlist's actual contents matter. Songs marked (validated) were
-# confirmed to work well in an actual generated playlist test run.
+# Spotify is the source of truth for what songs are in each stage's pool — this
+# file only defines playlist ids, stage order, durations, and generator settings.
+# For starter song suggestions per stage, see docs/spec_v4.md.
+#
+# Each stage's `id` is a stable identifier that stays fixed even if `name` (the
+# display label) changes later.
 
-no_repeat_days: 15
+generator:
+  no_repeat_days: 15
+  duration_tolerance_minutes: 2
 
 spotify:
   redirect_uri: "http://127.0.0.1:8888/callback"
@@ -17,120 +21,48 @@ progressions:
     output_playlist_name: "Today's Morning"
     output_playlist_id: ""
     stages:
-      - name: "Wake / Cinematic"
+      - id: wake_cinematic
+        name: "Wake / Cinematic"
         source_playlist_id: ""
         target_minutes: 8
-        seed_songs:
-          - "Time (Hans Zimmer)"
-          - "Day One (Hans Zimmer)"
-          - "Albatross (Fleetwood Mac)"
-          - "Cornfield Chase (Hans Zimmer)"
-          - "Mountains (Hans Zimmer)"
-          - "Motion Picture Soundtrack (Radiohead)"
-      - name: "Groove / Getting moving"
+      - id: groove
+        name: "Groove / Getting moving"
         source_playlist_id: ""
         target_minutes: 11
-        seed_songs:
-          - "Dean Town (Vulfpeck)"
-          - "Back Pocket (Vulfpeck)"
-          - "1612 (Vulfpeck)"
-          - "Maria También (Khruangbin)"
-          - "Friday Morning (Khruangbin)"
-          - "Cómo Se Siente (Rosalía)"
-      - name: "Warm / Easy"
+      - id: warm
+        name: "Warm / Easy"
         source_playlist_id: ""
         target_minutes: 12
-        seed_songs:
-          - "Dreams (Fleetwood Mac)"
-          - "Reckoner (Radiohead)"
-          - "The Chain (Fleetwood Mac)"
-          - "Messy (Olivia Dean)"
-          - "No Man (Olivia Dean)"
-          - "Dive (Olivia Dean)"
-          - "Work Song (Hozier)"
-      - name: "Building energy"
+      - id: building_energy
+        name: "Building energy"
         source_playlist_id: ""
         target_minutes: 14
-        seed_songs:
-          - "Freedom (Pharrell)"
-          - "Get Lucky (Daft Punk)"
-          - "Instant Crush (Daft Punk)"
-          - "Busy Earnin' (Jungle)"
-          - "Happy Man (Jungle)"
-          - "Redbone (Childish Gambino)"
-          - "Feels Like Summer (Childish Gambino)"
-      - name: "Full send / Fun"
+      - id: full_send_fun
+        name: "Full send / Fun"
         source_playlist_id: ""
         target_minutes: 15
-        seed_songs:
-          - "SAOKO (Rosalía)"
-          - "Titi Me Preguntó (Bad Bunny)"
-          - "Pink Pony Club (Chappell Roan)"
-          - "Callaíta (Bad Bunny)"
-          - "Good Luck, Babe! (Chappell Roan)"
-          - "Me Porto Bonito (Bad Bunny)"
 
   night:
     output_playlist_name: "Tonight's Wind Down"
     output_playlist_id: ""
     stages:
-      - name: "Soft landing"
+      - id: soft_landing
+        name: "Soft landing"
         source_playlist_id: ""
         target_minutes: 10
-        seed_songs:
-          - "Songbird (Fleetwood Mac)"
-          - "Landslide (Fleetwood Mac)"
-          - "Fade Into You (Mazzy Star)"
-          - "Into Dust (Mazzy Star)"
-          - "Show Me How (Lauv)"
-          - "Futile Devices (validated)"
-          - "To Be Alone With You (validated)"
-          - "Butterflies feat. AURORA (validated)"
-          - "Naked as We Came (validated)"
-      - name: "Reflective / emotional"
+      - id: reflective_emotional
+        name: "Reflective / emotional"
         source_playlist_id: ""
         target_minutes: 10
-        seed_songs:
-          - "Holocene (Bon Iver)"
-          - "Re: Stacks (Bon Iver)"
-          - "Should Have Known Better (Sufjan Stevens, validated)"
-          - "Messy (Olivia Dean)"
-          - "Heartbeats (The Knife)"
-          - "Stay Alive (validated)"
-      - name: "Deepening / atmospheric"
+      - id: deepening_atmospheric
+        name: "Deepening / atmospheric"
         source_playlist_id: ""
         target_minutes: 12
-        seed_songs:
-          - "Pyramid Song (Radiohead, validated)"
-          - "Weird Fishes (Radiohead)"
-          - "Everything In Its Right Place (Radiohead)"
-          - "Eventually (Tame Impala)"
-          - "Nude (Radiohead, validated)"
-          - "Shrike (Hozier, validated)"
-          - "Glass Eyes (validated)"
-      - name: "Instrumental descent"
+      - id: instrumental_descent
+        name: "Instrumental descent"
         source_playlist_id: ""
         target_minutes: 19
-        seed_songs:
-          - "S.T.A.Y. (Hans Zimmer, validated)"
-          - "No Time for Caution (Hans Zimmer)"
-          - "Says (Nils Frahm)"
-          - "Cornfield Chase (Hans Zimmer, validated)"
-          - "Everything Connected (Jordan Rakei)"
-      - name: "Reading / journaling"
+      - id: reading_journaling
+        name: "Reading / journaling"
         source_playlist_id: ""
         open_ended: true
-        seed_songs:
-          - "#19 (Nils Frahm, validated)"
-          - "1/1 - Music for Airports (Brian Eno, validated)"
-          - "1/2 (Brian Eno, validated)"
-          - "2/2 (Brian Eno, validated)"
-          - "A Lovely Place to Be (Ólafur Arnalds, validated)"
-          - "Silence - Instrumental (validated)"
-          - "By This River - Phantom (Nils Frahm, validated)"
-          - "Hægt kemur ljósið (Sigur Rós, validated)"
-          - "Þú ert jörðin (validated)"
-          - "As a Reminder (Nils Frahm, validated)"
-          - "Near Light (Ólafur Arnalds)"
-          - "On the Nature of Daylight (Max Richter)"
-          - "Kohto - [track TBD]"

@@ -1,67 +1,44 @@
-# playlist-maker
+# soundtrack-engine
 
-A Phase 1 implementation of the [Spotify Mood-Arc Playlist Generator spec](docs/spec.md):
-two Spotify playlists (**Morning**, **Night**) that follow a fixed mood arc, rebuilt on
-demand with a fresh shuffle and no exact repeat of recent rebuilds.
+A personal soundtrack engine: two Spotify playlists (**Morning**, **Night**) that follow a
+fixed emotional arc but are regenerated with fresh, shuffled song selections. See
+[`docs/spec_v4.md`](docs/spec_v4.md) for the full project plan (supersedes the earlier
+[`docs/spec.md`](docs/spec.md)).
 
-## How it works
+Built incrementally, one phase at a time, per that plan:
 
-Each playlist is made of 5 ordered mood "buckets" (config in
-[`config/playlists.json`](config/playlists.json)). Each bucket points at a source Spotify
-playlist you curate by hand. On rebuild, the script:
+- [x] **Phase 1 — Foundation**: project structure, YAML config schema (Pydantic), typing,
+      logging, unit tests.
+- [ ] **Phase 2 — Spotify Layer**: authentication and playlist read/write.
+- [ ] **Phase 3 — Generator**: duration-based playlist generation.
+- [ ] **Phase 4 — History**: SQLite play history, 15-day weighted no-repeat.
+- [ ] **Phase 5 — Publishing**: scheduled regeneration.
 
-1. Fetches each bucket's source pool.
-2. Excludes tracks used in the last N rebuilds of that playlist (no-repeat window).
-3. Shuffles what's left and picks the bucket's target song count.
-4. Concatenates the buckets in fixed order and overwrites the target playlist.
+## Phase 1 — what's here
 
-Night's 5th bucket ("Reading / journaling") is open-ended per the spec — instead of a
-fixed song count, the script shuffles and includes the *entire* source pool. Actual
-infinite looping/repeat is playback behavior handled by Spotify's own shuffle/repeat
-controls when you hit play, not something a static playlist can encode.
+- `src/soundtrack_engine/config.py` — Pydantic models (`Config`, `Progression`, `Stage`)
+  and `load_config()` for the YAML config.
+- `src/soundtrack_engine/logging_setup.py` — shared logging setup.
+- `config/config.example.yaml` — the Morning/Night progressions and stages from the spec,
+  with each stage's target duration and seed-song suggestions. Not wired to real Spotify
+  playlists yet — that starts in Phase 2.
+- `tests/test_config.py` — unit tests for config loading and validation.
 
-Rebuild history (which tracks were used in the last few rebuilds, per playlist) is kept
-locally in `data/history.json` — gitignored since it's local runtime state.
-
-## Setup
-
-1. Create a Spotify app at the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
-   Add `http://127.0.0.1:8888/callback` as a Redirect URI.
-2. `cp .env.example .env` and fill in `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` from
-   that app.
-3. `npm install`
-4. `npm run login` — opens a Spotify authorization URL (open it in your browser, approve
-   access), then saves tokens to `.spotify-tokens.json` (gitignored).
-5. Create your 10 source playlists (5 Morning buckets + 5 Night buckets) and your 2 target
-   playlists ("Morning", "Night") on Spotify, seeded per the mood suggestions in
-   [`docs/spec.md`](docs/spec.md).
-6. Fill in every `sourcePlaylistId` and both `targetPlaylistId` fields in
-   [`config/playlists.json`](config/playlists.json) with the real Spotify playlist IDs
-   (the ID is the string in a playlist's share link: `open.spotify.com/playlist/<ID>`).
-
-## Usage
+## Setup (development)
 
 ```
-npm run rebuild:morning
-npm run rebuild:night
+python3 -m venv .venv
+.venv/bin/pip install -e ".[dev]"
+.venv/bin/pytest
 ```
 
-Run these manually whenever you want a fresh version of that playlist (e.g. each morning
-or each evening). Automating the trigger (cron, a shortcut, Alexa) is Phase 2 — see
-[`docs/spec.md`](docs/spec.md).
+## Config
 
-## Tuning
+Copy `config/config.example.yaml` to `config/config.yaml` before Phase 2 needs real
+playlist IDs. Each stage needs a `source_playlist_id` (the ID from a playlist's share
+link: `open.spotify.com/playlist/<ID>`); each progression needs an
+`output_playlist_id`. `seed_songs` are documentation only — the engine reads a stage's
+actual source playlist contents, not this list.
 
-- `config/playlists.json` → `noRepeatWindow`: how many past rebuilds to exclude from
-  (default 3, per spec).
-- `config/playlists.json` → each bucket's `songCount`: songs picked per bucket per
-  rebuild (defaults match the spec's time targets).
-
-If a bucket's source pool is too small to satisfy the no-repeat window, the script warns
-and falls back to using the full pool for that bucket rather than failing the rebuild.
-
-## Open items from the spec
-
-See the "Open questions" section of [`docs/spec.md`](docs/spec.md) — these are playlist
-curation decisions (e.g. the Kohto track for Night bucket 5) that live in your source
-playlists, not in this script.
+`no_repeat_days` controls how far back the (future, Phase 4) history check looks before
+re-suggesting a song — currently set to 15.

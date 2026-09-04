@@ -1,4 +1,5 @@
 from soundtrack_engine.models import Track
+from soundtrack_engine.spotify_api_client import SpotifyApiClient
 from soundtrack_engine.spotify_client import SpotifyClient
 
 
@@ -23,6 +24,10 @@ def test_conforming_class_satisfies_spotify_client_protocol() -> None:
 
 def test_incomplete_class_does_not_satisfy_protocol() -> None:
     assert not isinstance(IncompleteClient(), SpotifyClient)
+
+
+def test_real_spotify_api_client_satisfies_protocol() -> None:
+    assert isinstance(SpotifyApiClient(access_token_provider=lambda: "fake"), SpotifyClient)
 
 
 def test_track_holds_uri_and_duration() -> None:

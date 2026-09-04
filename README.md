@@ -9,7 +9,7 @@ Built incrementally, one phase at a time, per that plan:
 
 - [x] **Phase 1 — Foundation**: project structure, YAML config schema (Pydantic), typing,
       logging, unit tests.
-- [ ] **Phase 2 — Spotify Layer**: authentication and playlist read/write.
+- [x] **Phase 2 — Spotify Layer**: OAuth login, token refresh, playlist read/write.
 - [ ] **Phase 3 — Generator**: duration-based playlist generation.
 - [ ] **Phase 4 — History**: SQLite play history, 15-day weighted no-repeat.
 - [ ] **Phase 5 — Publishing**: scheduled regeneration.
@@ -29,8 +29,22 @@ Built incrementally, one phase at a time, per that plan:
   each stage with a stable `id` (separate from its display `name`) and target duration.
   Not wired to real Spotify playlists yet — that starts in Phase 2. Song suggestions per
   stage live in `docs/spec_v4.md`, not in config.
-- `tests/test_config.py`, `tests/test_spotify_client.py` — unit tests for config
-  validation and the Spotify client contract.
+## Phase 2 — what's here
+
+- `src/soundtrack_engine/spotify_auth.py` — interactive OAuth login (Authorization Code
+  flow via a one-off local callback server) and access-token refresh. The only place that
+  reads `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET`.
+- `src/soundtrack_engine/token_store.py` — reads/writes `.spotify-tokens.json`
+  (gitignored, local only).
+- `src/soundtrack_engine/spotify_api_client.py` — `SpotifyApiClient`, the real
+  implementation of the `SpotifyClient` protocol: paginated playlist reads, playlist
+  overwrite (up to 100 tracks in one call — fine for this project's stage sizes).
+- `src/soundtrack_engine/cli.py` — `soundtrack-engine login` and
+  `soundtrack-engine show-playlist <id>` (a read-only sanity check for a playlist id,
+  useful while filling in `config.yaml`).
+- `tests/test_config.py`, `tests/test_spotify_client.py`, `tests/test_spotify_auth.py`,
+  `tests/test_spotify_api_client.py`, `tests/test_token_store.py` — unit tests; the
+  Spotify tests mock all HTTP calls, nothing hits the real API.
 
 ## Setup (development)
 
@@ -39,6 +53,19 @@ python3 -m venv .venv
 .venv/bin/pip install -e ".[dev]"
 .venv/bin/pytest
 ```
+
+Copy `.env.example` to `.env` and fill in `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET`
+from a [Spotify Developer app](https://developer.spotify.com/dashboard) (Redirect URI:
+`http://127.0.0.1:8888/callback`). Then:
+
+```
+soundtrack-engine login
+soundtrack-engine show-playlist <playlist_id>
+```
+
+`login` opens a browser for you to approve access and saves tokens locally; they refresh
+automatically after that. `show-playlist` is just a read-only check that a playlist ID is
+right and reachable — it's not part of the generator (Phase 3).
 
 ## Config
 

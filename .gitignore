@@ -7,5 +7,6 @@ venv/
 build/
 dist/
 .env
+.spotify-tokens.json
 data/*.db
 !data/.gitkeep

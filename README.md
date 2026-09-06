@@ -10,8 +10,8 @@ Built incrementally, one phase at a time, per that plan:
 - [x] **Phase 1 — Foundation**: project structure, YAML config schema (Pydantic), typing,
       logging, unit tests.
 - [x] **Phase 2 — Spotify Layer**: OAuth login, token refresh, playlist read/write.
-- [ ] **Phase 3 — Generator**: duration-based playlist generation.
-- [ ] **Phase 4 — History**: SQLite play history, 15-day weighted no-repeat.
+- [x] **Phase 3 — Generator**: duration-based playlist generation.
+- [x] **Phase 4 — History**: SQLite play history, 15-day weighted no-repeat.
 - [ ] **Phase 5 — Publishing**: scheduled regeneration.
 
 ## Phase 1 — what's here
@@ -29,6 +29,7 @@ Built incrementally, one phase at a time, per that plan:
   each stage with a stable `id` (separate from its display `name`) and target duration.
   Not wired to real Spotify playlists yet — that starts in Phase 2. Song suggestions per
   stage live in `docs/spec_v4.md`, not in config.
+
 ## Phase 2 — what's here
 
 - `src/soundtrack_engine/spotify_auth.py` — interactive OAuth login (Authorization Code
@@ -38,13 +39,47 @@ Built incrementally, one phase at a time, per that plan:
   (gitignored, local only).
 - `src/soundtrack_engine/spotify_api_client.py` — `SpotifyApiClient`, the real
   implementation of the `SpotifyClient` protocol: paginated playlist reads, playlist
-  overwrite (up to 100 tracks in one call — fine for this project's stage sizes).
-- `src/soundtrack_engine/cli.py` — `soundtrack-engine login` and
-  `soundtrack-engine show-playlist <id>` (a read-only sanity check for a playlist id,
-  useful while filling in `config.yaml`).
+  overwrite (up to 100 tracks in one call — fine for this project's stage sizes). Also
+  has `create_playlist`/`get_current_user_id`, one-time setup helpers outside the
+  `SpotifyClient` protocol (the generator/history/publishing phases never create
+  playlists, only read/overwrite existing ones).
+- `src/soundtrack_engine/bootstrap.py` — fills in any blank playlist ids in config by
+  creating real Spotify playlists for them. **Note:** Spotify currently blocks the
+  playlist-creation endpoint for this app even with correct scopes (confirmed: modifying
+  an existing playlist works, creating a new one doesn't) — so in practice, create
+  playlists by hand in Spotify and paste their ids into `config.yaml`; this code is
+  ready for if/when creation access is available.
+- `src/soundtrack_engine/cli.py` — `soundtrack-engine login`,
+  `soundtrack-engine show-playlist <id>` (read-only sanity check for a playlist id), and
+  `soundtrack-engine bootstrap-playlists`.
 - `tests/test_config.py`, `tests/test_spotify_client.py`, `tests/test_spotify_auth.py`,
-  `tests/test_spotify_api_client.py`, `tests/test_token_store.py` — unit tests; the
-  Spotify tests mock all HTTP calls, nothing hits the real API.
+  `tests/test_spotify_api_client.py`, `tests/test_token_store.py`, `tests/test_bootstrap.py`
+  — unit tests; the Spotify tests mock all HTTP calls, nothing hits the real API.
+
+## Phase 3 — what's here
+
+- `src/soundtrack_engine/generator.py` — `generate_stage_tracks` (weighted-random picks
+  from a pool until total duration is within `duration_tolerance_minutes` of a stage's
+  `target_minutes`, switching to a best-fit pick as it gets close), `generate_stage`
+  (handles a stage's `open_ended` case — the whole pool, shuffled, no duration target),
+  and `generate_progression` (runs every stage in order and concatenates the results).
+  Takes plain `Track` lists and an optional `weights` list — no Spotify calls, no
+  history/database access, fully testable with in-memory data. `weights` defaults to
+  uniform; Phase 4's `PlayHistory.weights_for()` is designed to plug straight into it.
+- `tests/test_generator.py` — unit tests, including the open-ended and
+  pool-too-small-for-target fallback cases.
+
+## Phase 4 — what's here
+
+- `src/soundtrack_engine/history.py` — `PlayHistory`, a small SQLite-backed store
+  (`data/history.db`, gitignored) of which tracks were generated for which
+  progression/stage and when. `weights_for(...)` turns that into the `weights` list
+  `generate_stage_tracks` expects: 1.0 for a track never played or last played at/beyond
+  `no_repeat_days` ago, ramping linearly down to a small floor (never fully zero — a thin
+  pool shouldn't be able to stall generation) the more recently it was played.
+- `tests/test_history.py` — unit tests against an in-memory SQLite database.
+- Wiring `PlayHistory` + `generate_progression` + the real Spotify read/write into an
+  actual rebuild command is Phase 5 (Publishing) — not built yet.
 
 ## Setup (development)
 

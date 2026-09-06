@@ -63,3 +63,32 @@ def test_replace_playlist_tracks_rejects_too_many_uris() -> None:
 
     with pytest.raises(ValueError):
         _client().replace_playlist_tracks("playlist123", too_many)
+
+
+def test_get_current_user_id_returns_id() -> None:
+    response = MagicMock()
+    response.raise_for_status.return_value = None
+    response.json.return_value = {"id": "user123", "display_name": "Someone"}
+
+    with patch("soundtrack_engine.spotify_api_client.requests.get", return_value=response):
+        assert _client().get_current_user_id() == "user123"
+
+
+def test_create_playlist_returns_new_id_and_sends_expected_payload() -> None:
+    response = MagicMock()
+    response.raise_for_status.return_value = None
+    response.json.return_value = {"id": "new-playlist-id"}
+
+    with patch(
+        "soundtrack_engine.spotify_api_client.requests.post", return_value=response
+    ) as mock_post:
+        playlist_id = _client().create_playlist("user123", "My Playlist", description="desc")
+
+    assert playlist_id == "new-playlist-id"
+    mock_post.assert_called_once()
+    assert mock_post.call_args.args[0] == "https://api.spotify.com/v1/users/user123/playlists"
+    assert mock_post.call_args.kwargs["json"] == {
+        "name": "My Playlist",
+        "description": "desc",
+        "public": False,
+    }

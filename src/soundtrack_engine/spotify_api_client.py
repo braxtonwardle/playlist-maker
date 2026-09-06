@@ -61,3 +61,23 @@ class SpotifyApiClient:
             timeout=10,
         )
         response.raise_for_status()
+
+    # --- One-time setup helpers, not part of the SpotifyClient protocol: the ---
+    # --- generator/history/publishing phases never need to create a playlist. ---
+
+    def get_current_user_id(self) -> str:
+        response = requests.get(f"{API_BASE}/me", headers=self._headers(), timeout=10)
+        response.raise_for_status()
+        return response.json()["id"]
+
+    def create_playlist(
+        self, user_id: str, name: str, description: str = "", public: bool = False
+    ) -> str:
+        response = requests.post(
+            f"{API_BASE}/users/{user_id}/playlists",
+            headers=self._headers(),
+            json={"name": name, "description": description, "public": public},
+            timeout=10,
+        )
+        response.raise_for_status()
+        return response.json()["id"]

@@ -87,7 +87,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
-    load_dotenv()
+    # override=True: .env is the authoritative source, even if the shell already has
+    # (possibly stale/empty) same-named variables set — e.g. from an editor's terminal
+    # env-file injection that ran before .env had real values.
+    load_dotenv(override=True)
     configure_logging()
     args = build_parser().parse_args()
     try:

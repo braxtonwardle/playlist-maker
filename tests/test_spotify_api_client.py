@@ -15,17 +15,17 @@ def test_fetch_playlist_tracks_paginates_and_skips_local_or_missing_tracks() -> 
     page_one.raise_for_status.return_value = None
     page_one.json.return_value = {
         "items": [
-            {"track": {"uri": "spotify:track:1", "duration_ms": 100, "is_local": False}},
-            {"track": {"uri": "spotify:track:2", "duration_ms": 200, "is_local": True}},
+            {"item": {"uri": "spotify:track:1", "duration_ms": 100, "is_local": False}},
+            {"item": {"uri": "spotify:track:2", "duration_ms": 200, "is_local": True}},
         ],
-        "next": "https://api.spotify.com/v1/playlists/x/tracks?offset=100",
+        "next": "https://api.spotify.com/v1/playlists/x/items?offset=100",
     }
     page_two = MagicMock()
     page_two.raise_for_status.return_value = None
     page_two.json.return_value = {
         "items": [
-            {"track": {"uri": "spotify:track:3", "duration_ms": 300, "is_local": False}},
-            {"track": None},
+            {"item": {"uri": "spotify:track:3", "duration_ms": 300, "is_local": False}},
+            {"item": None},
         ],
         "next": None,
     }

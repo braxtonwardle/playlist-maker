@@ -26,11 +26,12 @@ class SpotifyApiClient:
         """Return every track currently in the given playlist, in playlist order."""
         tracks: list[Track] = []
         # Spotify's newer API surface renamed this sub-resource from /tracks to
-        # /items; this app gets 403s on /tracks (confirmed against a real playlist)
-        # but /items works identically.
+        # /items (this app gets 403s on /tracks against a real playlist, confirmed),
+        # and within each entry, the nested track object is now called "item"
+        # rather than "track" (also confirmed against a real, populated playlist).
         url: str | None = f"{API_BASE}/playlists/{playlist_id}/items"
         params: dict[str, object] | None = {
-            "fields": "items(track(uri,duration_ms,is_local)),next",
+            "fields": "items(item(uri,duration_ms,is_local)),next",
             "limit": 100,
         }
 
@@ -39,8 +40,8 @@ class SpotifyApiClient:
             response.raise_for_status()
             payload = response.json()
 
-            for item in payload["items"]:
-                track = item.get("track")
+            for entry in payload["items"]:
+                track = entry.get("item")
                 if track and not track.get("is_local") and track.get("uri"):
                     tracks.append(Track(uri=track["uri"], duration_ms=track["duration_ms"]))
 

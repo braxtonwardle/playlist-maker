@@ -12,8 +12,8 @@ Built incrementally, one phase at a time, per that plan:
 - [x] **Phase 2 — Spotify Layer**: OAuth login, token refresh, playlist read/write.
 - [x] **Phase 3 — Generator**: duration-based playlist generation.
 - [x] **Phase 4 — History**: SQLite play history, 15-day weighted no-repeat.
-- [~] **Phase 5 — Publishing**: on-demand `generate` command done; automatic scheduling
-      (Oracle Cloud VM) not yet.
+- [x] **Phase 5 — Publishing**: on-demand `generate` command, deployed and scheduled
+      daily via cron on an Oracle Cloud Always Free VM.
 
 ## Phase 1 — what's here
 
@@ -91,6 +91,30 @@ Built incrementally, one phase at a time, per that plan:
 - `soundtrack-engine generate <morning|night>` — runs `rebuild_progression` for real.
 - `tests/test_publish.py` — unit tests against a fake `SpotifyClient` and in-memory
   history; no real network calls.
+
+### Deployed: Oracle Cloud VM, cron-scheduled
+
+Running on an Always Free `VM.Standard.E2.1.Micro` instance (Oracle Linux 9), `cron`
+firing `generate morning` at 3:00 AM and `generate night` at 3:05 AM Pacific
+(`America/Los_Angeles`) daily.
+
+**Python is installed as a portable build, not via `dnf`.** On this instance size
+(~500MB–1GB RAM depending on which Micro instance you get), `dnf install` for
+`python3.11`/`git` reliably drove the box into severe swap-thrashing and either hung
+indefinitely or got OOM-killed — reproduced across two separate instances, with more
+swap, with `nice`/`ionice` priority tuning, and with `install_weak_deps=False`, all with
+the same result. The fix: download a prebuilt, self-contained CPython 3.11 from
+[astral-sh/python-build-standalone](https://github.com/astral-sh/python-build-standalone)
+(the `install_only` `x86_64-unknown-linux-gnu` `.tar.gz` build; matches this project's
+`requires-python`) to `/opt/python3.11`, and use its bundled `pip` to install this
+project's dependencies — pip's resolution for a handful of pure-Python packages is far
+lighter than `dnf`'s system-level solver and never triggered the issue. `git` isn't
+needed on the server at all: code is deployed via `scp` of a tarball rather than
+`git clone`, so the server never needs GitHub credentials either.
+
+To redeploy after code changes: package and copy over the same way (exclude `.venv`,
+`.git`, `__pycache__`, `data/*.db`), then re-run `.venv/bin/pip install -e .` on the
+server if dependencies changed.
 
 ## Setup (development)
 

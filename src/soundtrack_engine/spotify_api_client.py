@@ -25,7 +25,10 @@ class SpotifyApiClient:
     def fetch_playlist_tracks(self, playlist_id: str) -> list[Track]:
         """Return every track currently in the given playlist, in playlist order."""
         tracks: list[Track] = []
-        url: str | None = f"{API_BASE}/playlists/{playlist_id}/tracks"
+        # Spotify's newer API surface renamed this sub-resource from /tracks to
+        # /items; this app gets 403s on /tracks (confirmed against a real playlist)
+        # but /items works identically.
+        url: str | None = f"{API_BASE}/playlists/{playlist_id}/items"
         params: dict[str, object] | None = {
             "fields": "items(track(uri,duration_ms,is_local)),next",
             "limit": 100,
@@ -55,7 +58,7 @@ class SpotifyApiClient:
             )
 
         response = requests.put(
-            f"{API_BASE}/playlists/{playlist_id}/tracks",
+            f"{API_BASE}/playlists/{playlist_id}/items",
             headers=self._headers(),
             json={"uris": track_uris},
             timeout=10,
@@ -69,6 +72,16 @@ class SpotifyApiClient:
         response = requests.get(f"{API_BASE}/me", headers=self._headers(), timeout=10)
         response.raise_for_status()
         return response.json()["id"]
+
+    def get_playlist_name(self, playlist_id: str) -> str:
+        response = requests.get(
+            f"{API_BASE}/playlists/{playlist_id}",
+            headers=self._headers(),
+            params={"fields": "name"},
+            timeout=10,
+        )
+        response.raise_for_status()
+        return response.json()["name"]
 
     def create_playlist(
         self, user_id: str, name: str, description: str = "", public: bool = False

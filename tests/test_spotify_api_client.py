@@ -92,3 +92,12 @@ def test_create_playlist_returns_new_id_and_sends_expected_payload() -> None:
         "description": "desc",
         "public": False,
     }
+
+
+def test_get_playlist_name_returns_name() -> None:
+    response = MagicMock()
+    response.raise_for_status.return_value = None
+    response.json.return_value = {"name": "Wake / Cinematic"}
+
+    with patch("soundtrack_engine.spotify_api_client.requests.get", return_value=response):
+        assert _client().get_playlist_name("playlist123") == "Wake / Cinematic"

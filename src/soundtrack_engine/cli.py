@@ -12,7 +12,9 @@ from dotenv import load_dotenv
 
 from soundtrack_engine.bootstrap import bootstrap_playlists
 from soundtrack_engine.config import load_config
+from soundtrack_engine.history import PlayHistory
 from soundtrack_engine.logging_setup import configure_logging
+from soundtrack_engine.publish import rebuild_progression
 from soundtrack_engine.spotify_api_client import SpotifyApiClient
 from soundtrack_engine.spotify_auth import MissingCredentialsError
 from soundtrack_engine.spotify_auth import login as spotify_login
@@ -62,6 +64,22 @@ def _cmd_bootstrap_playlists(args: argparse.Namespace) -> None:
     print(f"Wrote {CONFIG_PATH}")
 
 
+def _cmd_generate(args: argparse.Namespace) -> None:
+    """Rebuild one progression's output playlist from its current stage pools."""
+    config = load_config(CONFIG_PATH)
+    client = SpotifyApiClient()
+    history = PlayHistory()
+
+    tracks = rebuild_progression(args.progression, config, client, history)
+
+    minutes, seconds = divmod(sum(t.duration_ms for t in tracks) // 1000, 60)
+    progression = config.progressions[args.progression]
+    print(
+        f"Wrote {len(tracks)} tracks ({minutes}m{seconds:02d}s) to "
+        f"\"{progression.output_playlist_name}\""
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="soundtrack-engine")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -82,6 +100,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Create any missing source/output playlists from config and save their ids",
     )
     bootstrap_parser.set_defaults(func=_cmd_bootstrap_playlists)
+
+    generate_parser = subparsers.add_parser(
+        "generate",
+        help="Rebuild a progression's output playlist from its current stage pools",
+    )
+    generate_parser.add_argument("progression", choices=["morning", "night"])
+    generate_parser.set_defaults(func=_cmd_generate)
 
     return parser
 

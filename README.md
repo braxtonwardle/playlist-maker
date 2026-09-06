@@ -12,7 +12,8 @@ Built incrementally, one phase at a time, per that plan:
 - [x] **Phase 2 — Spotify Layer**: OAuth login, token refresh, playlist read/write.
 - [x] **Phase 3 — Generator**: duration-based playlist generation.
 - [x] **Phase 4 — History**: SQLite play history, 15-day weighted no-repeat.
-- [ ] **Phase 5 — Publishing**: scheduled regeneration.
+- [~] **Phase 5 — Publishing**: on-demand `generate` command done; automatic scheduling
+      (Oracle Cloud VM) not yet.
 
 ## Phase 1 — what's here
 
@@ -78,8 +79,18 @@ Built incrementally, one phase at a time, per that plan:
   `no_repeat_days` ago, ramping linearly down to a small floor (never fully zero — a thin
   pool shouldn't be able to stall generation) the more recently it was played.
 - `tests/test_history.py` — unit tests against an in-memory SQLite database.
-- Wiring `PlayHistory` + `generate_progression` + the real Spotify read/write into an
-  actual rebuild command is Phase 5 (Publishing) — not built yet.
+
+## Phase 5 — what's here (on-demand half only)
+
+- `src/soundtrack_engine/publish.py` — `rebuild_progression()`: for each stage in a
+  progression, fetch its pool, weight it via `PlayHistory`, generate, record the
+  generation back to history, then overwrite the output playlist with the full
+  concatenated result. This is the wiring the "automatic, on a schedule" half of
+  Phase 5 will eventually call — that half (running this on a schedule, on the Oracle
+  Cloud VM from the spec's resolved decisions) isn't built yet.
+- `soundtrack-engine generate <morning|night>` — runs `rebuild_progression` for real.
+- `tests/test_publish.py` — unit tests against a fake `SpotifyClient` and in-memory
+  history; no real network calls.
 
 ## Setup (development)
 

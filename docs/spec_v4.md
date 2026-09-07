@@ -160,6 +160,16 @@ goal of the MVP. Phases 1–5 are what "done" means for this project.
   workflow.
 - **Phase 7 – Dashboard** — lightweight Flask/FastAPI UI to edit stages, durations,
   settings.
+  - Raised again post-MVP (Sep 2026): a phone-friendly companion app, static frontend
+    (e.g. GitHub Pages) with a "regenerate now" button for morning/night, calling a
+    small authenticated API endpoint on the Oracle Cloud VM. Would need real
+    infrastructure beyond what exists today: an internet-facing API secured with a
+    bearer token (so it can't be triggered by random traffic), and TLS in front of it
+    (reverse proxy + Let's Encrypt, or a tunnel service like Cloudflare Tunnel, to avoid
+    managing certs by hand). Suggested scope for a v1: just the manual trigger button;
+    treat "edit stage durations remotely" as a separate, later follow-up, since safely
+    validating and pushing config changes to a live server is a bigger feature than
+    firing a command.
 - **Phase 8 – Intelligence** — metadata scoring, transition optimization,
   weather/schedule modifiers, adaptive learning.
 

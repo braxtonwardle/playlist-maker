@@ -8,5 +8,6 @@ build/
 dist/
 .env
 .spotify-tokens.json
+.pyproject.sha256
 data/*.db
 !data/.gitkeep

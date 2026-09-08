@@ -109,12 +109,29 @@ the same result. The fix: download a prebuilt, self-contained CPython 3.11 from
 `requires-python`) to `/opt/python3.11`, and use its bundled `pip` to install this
 project's dependencies — pip's resolution for a handful of pure-Python packages is far
 lighter than `dnf`'s system-level solver and never triggered the issue. `git` isn't
-needed on the server at all: code is deployed via `scp` of a tarball rather than
-`git clone`, so the server never needs GitHub credentials either.
+needed on the server at all — deployment uses [`deploy.sh`](deploy.sh), which pulls a
+tarball of `main` straight from GitHub over plain HTTPS (`curl`/`tar`/`cp` only) rather
+than `git clone`.
 
-To redeploy after code changes: package and copy over the same way (exclude `.venv`,
-`.git`, `__pycache__`, `data/*.db`), then re-run `.venv/bin/pip install -e .` on the
-server if dependencies changed.
+**Auto-deploy before every scheduled run.** `deploy.sh` is chained in front of both cron
+entries, so any commit to `main` — from a laptop, from GitHub's web UI, wherever — is
+live by the next scheduled generation, with no manual redeploy step:
+
+```
+0 3 * * * /opt/playlist-maker/deploy.sh >> /opt/playlist-maker/deploy.log 2>&1 && /opt/playlist-maker/.venv/bin/soundtrack-engine generate morning >> /opt/playlist-maker/generate.log 2>&1
+5 3 * * * /opt/playlist-maker/deploy.sh >> /opt/playlist-maker/deploy.log 2>&1 && /opt/playlist-maker/.venv/bin/soundtrack-engine generate night >> /opt/playlist-maker/generate.log 2>&1
+```
+
+(swap `/opt/playlist-maker` for the actual deploy path). `deploy.sh` never deletes files
+— it only overwrites tracked files with the latest `main` — so `.venv/`, `data/history.db`,
+`.env`, and `.spotify-tokens.json` all survive every deploy untouched. It also skips
+reinstalling dependencies unless `pyproject.toml` actually changed, so a config-only
+commit doesn't cost a `pip` network round-trip on a resource-constrained VM.
+
+One-time setup: `scp deploy.sh` to the server once and `chmod +x` it. Every run after
+that pulls its own latest version too, so future changes to `deploy.sh` deploy
+themselves. If the repo is ever made private, set a `GITHUB_TOKEN` env var (a read-only,
+repo-scoped fine-grained PAT) wherever cron runs — `deploy.sh` picks it up automatically.
 
 ## Setup (development)
 

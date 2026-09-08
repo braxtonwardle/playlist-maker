@@ -20,7 +20,7 @@ progressions:
       - id: wake_cinematic
         name: "Wake / Cinematic"
         source_playlist_id: "3uai8FGaUHEXiiTHW42L2Q"
-        target_minutes: 8
+        target_minutes: 15
       - id: groove
         name: "Groove / Getting moving"
         source_playlist_id: "3JDLQ0Y25dUhJYGWJ1tWHO"
@@ -36,7 +36,7 @@ progressions:
       - id: full_send_fun
         name: "Full send / Fun"
         source_playlist_id: "7pJIk15BUOgJGgIbP1hEwh"
-        target_minutes: 15
+        target_minutes: 30
 
   night:
     output_playlist_name: "Tonight's Descent"
@@ -57,7 +57,7 @@ progressions:
       - id: instrumental_descent
         name: "Instrumental descent"
         source_playlist_id: "02tzygQ5rBEWaS22Z4eQr3"
-        target_minutes: 19
+        target_minutes: 10
       - id: reading_journaling
         name: "Reading / journaling"
         source_playlist_id: "4DsxuOLXFkNHaRJGpi7rhy"

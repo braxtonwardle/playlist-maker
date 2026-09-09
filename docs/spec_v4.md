@@ -66,6 +66,12 @@ stable output playlists such as "Today's Morning" and "Tonight's Wind Down".
 4. Building energy — 14 min
 5. Full send / Fun — 15 min
 
+Update (Sep 2026, tuned after living with it): Wake / Cinematic extended to **15 min**
+(wanted more room to actually wake up), and Full send / Fun made **open-ended** — same
+"whole pool, shuffled, no fixed length" treatment as Night's Reading / journaling — since
+it's also the last stage of its progression. `config.yaml` is the live source of truth;
+this section is left as the original design rationale.
+
 ### Night (~60 min for stages 1–4, stage 5 open-ended)
 
 Compressed toward reaching "no lyrics" sooner — stages 1–3 shortened, stage 4 gets more
@@ -75,6 +81,10 @@ room. Instrumental descent should begin roughly 30–32 minutes in.
 2. Reflective / emotional — 10 min
 3. Deepening / atmospheric — 12 min
 4. Instrumental descent — 18–20 min
+
+Update (Sep 2026, tuned after living with it): Instrumental descent shortened to
+**10 min**. `config.yaml` is the live source of truth; the above is the original design
+rationale.
 5. Reading / journaling — open-ended: loop/repeat the stage pool on shuffle rather than a
    fixed duration. This stage needs its own "keep playing until stopped" handling, separate
    from the duration-target logic used in stages 1–4.

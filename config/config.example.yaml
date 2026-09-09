@@ -24,7 +24,7 @@ progressions:
       - id: wake_cinematic
         name: "Wake / Cinematic"
         source_playlist_id: ""
-        target_minutes: 8
+        target_minutes: 15
       - id: groove
         name: "Groove / Getting moving"
         source_playlist_id: ""
@@ -40,7 +40,7 @@ progressions:
       - id: full_send_fun
         name: "Full send / Fun"
         source_playlist_id: ""
-        target_minutes: 15
+        open_ended: true
 
   night:
     output_playlist_name: "Tonight's Wind Down"
@@ -61,7 +61,7 @@ progressions:
       - id: instrumental_descent
         name: "Instrumental descent"
         source_playlist_id: ""
-        target_minutes: 19
+        target_minutes: 10
       - id: reading_journaling
         name: "Reading / journaling"
         source_playlist_id: ""

@@ -36,7 +36,7 @@ progressions:
       - id: full_send_fun
         name: "Full send / Fun"
         source_playlist_id: "7pJIk15BUOgJGgIbP1hEwh"
-        target_minutes: 30
+        open_ended: true
 
   night:
     output_playlist_name: "Tonight's Descent"

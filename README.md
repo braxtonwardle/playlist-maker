@@ -67,8 +67,13 @@ Built incrementally, one phase at a time, per that plan:
   Takes plain `Track` lists and an optional `weights` list — no Spotify calls, no
   history/database access, fully testable with in-memory data. `weights` defaults to
   uniform; Phase 4's `PlayHistory.weights_for()` is designed to plug straight into it.
-- `tests/test_generator.py` — unit tests, including the open-ended and
-  pool-too-small-for-target fallback cases.
+  Whichever tracks get picked for a stage, `_diversify_by_artist` then reorders just
+  that stage's picks (never across a stage boundary) so same-artist tracks don't land
+  back-to-back — best-effort: if one artist is more than half a stage's picks, at least
+  one adjacent repeat is unavoidable, but it won't be worse than that.
+- `tests/test_generator.py` — unit tests, including the open-ended,
+  pool-too-small-for-target fallback, and artist-diversity (both a feasible case with
+  zero adjacent repeats and an infeasible one held to the theoretical minimum) cases.
 
 ## Phase 4 — what's here
 

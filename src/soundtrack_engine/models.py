@@ -6,7 +6,10 @@ from pydantic import BaseModel
 
 
 class Track(BaseModel):
-    """A song as the rest of the engine needs to know it: URI and length."""
+    """A song as the rest of the engine needs to know it: URI, length, and primary
+    artist (for spacing same-artist tracks apart within a stage's picks).
+    """
 
     uri: str
     duration_ms: int
+    artist_id: str = ""

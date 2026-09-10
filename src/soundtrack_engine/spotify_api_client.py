@@ -31,7 +31,7 @@ class SpotifyApiClient:
         # rather than "track" (also confirmed against a real, populated playlist).
         url: str | None = f"{API_BASE}/playlists/{playlist_id}/items"
         params: dict[str, object] | None = {
-            "fields": "items(item(uri,duration_ms,is_local)),next",
+            "fields": "items(item(uri,duration_ms,is_local,artists(id))),next",
             "limit": 100,
         }
 
@@ -43,7 +43,11 @@ class SpotifyApiClient:
             for entry in payload["items"]:
                 track = entry.get("item")
                 if track and not track.get("is_local") and track.get("uri"):
-                    tracks.append(Track(uri=track["uri"], duration_ms=track["duration_ms"]))
+                    artists = track.get("artists") or []
+                    artist_id = artists[0]["id"] if artists else ""
+                    tracks.append(
+                        Track(uri=track["uri"], duration_ms=track["duration_ms"], artist_id=artist_id)
+                    )
 
             url = payload.get("next")
             params = None  # `next` is already a full URL with its query params baked in

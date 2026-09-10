@@ -9,6 +9,17 @@ def _tracks(*durations_ms: int) -> list[Track]:
     return [Track(uri=f"spotify:track:{i}", duration_ms=ms) for i, ms in enumerate(durations_ms)]
 
 
+def _tracks_with_artists(*artist_ids: str, duration_ms: int = 60_000) -> list[Track]:
+    return [
+        Track(uri=f"spotify:track:{i}", duration_ms=duration_ms, artist_id=artist_id)
+        for i, artist_id in enumerate(artist_ids)
+    ]
+
+
+def _adjacent_same_artist_count(tracks: list[Track]) -> int:
+    return sum(1 for a, b in zip(tracks, tracks[1:]) if a.artist_id == b.artist_id)
+
+
 def test_generate_stage_tracks_hits_target_with_uniform_pool() -> None:
     # Six 4-minute tracks; target 12 min +/- 2 min lands exactly on three tracks (12 min),
     # regardless of which three get picked — makes this deterministic without seeding rng.
@@ -74,3 +85,44 @@ def test_generate_progression_uses_empty_list_for_stage_with_no_pool_entry() -> 
     result = generate_progression(progression, pools_by_stage_id={}, tolerance_minutes=1)
 
     assert result == []
+
+
+def test_generate_stage_tracks_avoids_adjacent_same_artist_when_feasible() -> None:
+    # 2 tracks each from 3 different artists, 1 min each; target forces all 6 in.
+    # Max group size (2) is well within what a no-adjacent-repeat order allows.
+    pool = _tracks_with_artists("A", "A", "B", "B", "C", "C")
+
+    selected = generate_stage_tracks(pool, target_minutes=6, tolerance_minutes=0.5)
+
+    assert len(selected) == 6
+    assert _adjacent_same_artist_count(selected) == 0
+
+
+def test_generate_stage_tracks_minimizes_adjacent_repeats_when_infeasible() -> None:
+    # One artist (A) has 4 of 6 tracks — more than half, so at least one adjacent
+    # repeat is mathematically unavoidable. The algorithm should still hold that
+    # to the theoretical minimum (1), not let them clump together.
+    pool = _tracks_with_artists("A", "A", "A", "A", "B", "C")
+
+    selected = generate_stage_tracks(pool, target_minutes=6, tolerance_minutes=0.5)
+
+    assert len(selected) == 6
+    assert _adjacent_same_artist_count(selected) == 1
+
+
+def test_generate_stage_tracks_diversify_does_not_change_which_tracks_are_picked() -> None:
+    pool = _tracks_with_artists("A", "A", "B", "B", "C", "C")
+
+    selected = generate_stage_tracks(pool, target_minutes=6, tolerance_minutes=0.5)
+
+    assert {t.uri for t in selected} == {t.uri for t in pool}
+
+
+def test_generate_stage_open_ended_avoids_adjacent_same_artist_when_feasible() -> None:
+    pool = _tracks_with_artists("A", "A", "B", "B", "C", "C")
+    stage = Stage(id="reading", name="Reading / journaling", open_ended=True)
+
+    result = generate_stage(stage, pool, tolerance_minutes=2, rng=random.Random(7))
+
+    assert {t.uri for t in result} == {t.uri for t in pool}
+    assert _adjacent_same_artist_count(result) == 0

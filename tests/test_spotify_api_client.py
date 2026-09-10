@@ -15,7 +15,14 @@ def test_fetch_playlist_tracks_paginates_and_skips_local_or_missing_tracks() -> 
     page_one.raise_for_status.return_value = None
     page_one.json.return_value = {
         "items": [
-            {"item": {"uri": "spotify:track:1", "duration_ms": 100, "is_local": False}},
+            {
+                "item": {
+                    "uri": "spotify:track:1",
+                    "duration_ms": 100,
+                    "is_local": False,
+                    "artists": [{"id": "artist-a"}],
+                }
+            },
             {"item": {"uri": "spotify:track:2", "duration_ms": 200, "is_local": True}},
         ],
         "next": "https://api.spotify.com/v1/playlists/x/items?offset=100",
@@ -24,7 +31,14 @@ def test_fetch_playlist_tracks_paginates_and_skips_local_or_missing_tracks() -> 
     page_two.raise_for_status.return_value = None
     page_two.json.return_value = {
         "items": [
-            {"item": {"uri": "spotify:track:3", "duration_ms": 300, "is_local": False}},
+            {
+                "item": {
+                    "uri": "spotify:track:3",
+                    "duration_ms": 300,
+                    "is_local": False,
+                    "artists": [],
+                }
+            },
             {"item": None},
         ],
         "next": None,
@@ -37,8 +51,8 @@ def test_fetch_playlist_tracks_paginates_and_skips_local_or_missing_tracks() -> 
         tracks = _client().fetch_playlist_tracks("playlist123")
 
     assert tracks == [
-        Track(uri="spotify:track:1", duration_ms=100),
-        Track(uri="spotify:track:3", duration_ms=300),
+        Track(uri="spotify:track:1", duration_ms=100, artist_id="artist-a"),
+        Track(uri="spotify:track:3", duration_ms=300, artist_id=""),
     ]
     assert mock_get.call_count == 2
 

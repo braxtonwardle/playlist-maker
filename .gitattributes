@@ -1,0 +1,5 @@
+# Scripts that run on the Linux server must keep LF endings regardless of the
+# editing platform — a CRLF shebang line ("#!/usr/bin/env bash\r") fails outright
+# on Linux. deploy.sh re-pulls and overwrites itself on every run, so a CRLF
+# regression here breaks every future auto-deploy until fixed at the source.
+*.sh text eol=lf

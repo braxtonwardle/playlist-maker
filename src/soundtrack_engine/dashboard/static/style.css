@@ -17,6 +17,7 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+[x-cloak] { display: none !important; }
 
 body {
   margin: 0;
@@ -130,7 +131,11 @@ input[type="range"]::-moz-range-thumb {
   min-width: 3.6rem; text-align: right; flex: none;
 }
 
-.stage-form-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.unsaved-badge {
+  display: block; color: var(--gold-bright); font-size: 11px; font-weight: 600;
+  margin: 6px 2px 0;
+}
+.stage-form-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .stage-form-actions .save-btn { flex: 1; }
 
 /* ---------- generate status ---------- */

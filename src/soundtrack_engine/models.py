@@ -2,11 +2,28 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Track(BaseModel):
-    """A song as the rest of the engine needs to know it: URI and length."""
+    """A song as the rest of the engine needs to know it: URI, length, and enough
+    display metadata (name/artists) for the dashboard to show a track list without a
+    separate Spotify lookup. `name`/`artists` default to empty since most of the
+    engine (generator, history) only cares about `uri`/`duration_ms`.
+    """
 
     uri: str
     duration_ms: int
+    name: str = ""
+    artists: list[str] = Field(default_factory=list)
+
+
+class StageResult(BaseModel):
+    """One stage's generated tracks, tagged with which stage they came from — lets
+    callers (the dashboard, in particular) show a track list grouped/labeled by
+    stage without re-deriving that from config.
+    """
+
+    stage_id: str
+    stage_name: str
+    tracks: list[Track]

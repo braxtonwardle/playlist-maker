@@ -14,6 +14,9 @@ Built incrementally, one phase at a time, per that plan:
 - [x] **Phase 4 — History**: SQLite play history, 15-day weighted no-repeat.
 - [x] **Phase 5 — Publishing**: on-demand `generate` command, deployed and scheduled
       daily via cron on an Oracle Cloud Always Free VM.
+- [x] **Phase 6 — Dashboard**: mobile-first PWA control panel (FastAPI + HTMX/Jinja/Alpine,
+      no Node/React build step) for editing stage durations and triggering generation from
+      an iPhone, on top of the same VM.
 
 ## Phase 1 — what's here
 
@@ -133,6 +136,35 @@ that pulls its own latest version too, so future changes to `deploy.sh` deploy
 themselves. If the repo is ever made private, set a `GITHUB_TOKEN` env var (a read-only,
 repo-scoped fine-grained PAT) wherever cron runs — `deploy.sh` picks it up automatically.
 
+## Phase 6 — what's here
+
+- `src/soundtrack_engine/dashboard/` — a small FastAPI app: single-password auth
+  (`auth.py`/`security.py` — bcrypt + a signed, timed session cookie, no user accounts
+  or OAuth), stage-duration editing that reuses `Stage`/`Progression`'s own Pydantic
+  validation (`config_editing.py`), and routes (`routes.py`) for login, the single
+  dashboard page, saving config, and triggering generation. Rendered server-side with
+  Jinja2 + HTMX + a touch of Alpine.js for the duration sliders — no Node/React build
+  step, deliberately, given this runs on the same resource-constrained VM as everything
+  else.
+- `soundtrack-engine hash-password` — prints a `DASHBOARD_PASSWORD_HASH` value for the
+  dashboard's `.env`.
+- `SOUNDTRACK_CONFIG_PATH` (see `config.py`'s `resolve_config_path()`) lets the live
+  config live outside the repo checkout in production, so `deploy.sh` pulling fresh
+  code never clobbers a config change made through the dashboard. Defaults to the
+  in-repo `config/config.yaml` for local development.
+- `rebuild_progression()` (Phase 5) now returns each stage's tracks tagged with
+  `stage_id`/`stage_name` (`models.StageResult`) instead of one flat list, and `Track`
+  carries `name`/`artists` — both purely so the dashboard can show a Song/Artist/Bucket
+  table straight from a generation run, no extra Spotify lookup needed.
+- `tests/test_dashboard_auth.py`, `tests/test_dashboard_config_editing.py`,
+  `tests/test_dashboard_routes.py`, `tests/test_dashboard_static.py` — unit/route tests
+  (`fastapi.testclient.TestClient` for routes, a fake `SpotifyClient` for generation);
+  no real network calls.
+- [`docs/dashboard-deployment.md`](docs/dashboard-deployment.md) — deploying this
+  alongside the existing cron setup: moving the live config out of the repo directory,
+  a systemd user service so the dashboard survives across deploys, and exposing it
+  through a Cloudflare Tunnel (no inbound port opened on the VM).
+
 ## Setup (development)
 
 ```
@@ -170,3 +202,9 @@ The `generator` section is the home for playlist-generation settings:
 `no_repeat_days` (currently 15) controls how far back the future Phase 4 history check
 looks before re-suggesting a song; `duration_tolerance_minutes` (currently 2) controls
 how close a stage's generated length must land to its `target_minutes`.
+
+By default the CLI and dashboard both read/write `config/config.yaml` in the repo.
+Set `SOUNDTRACK_CONFIG_PATH` to point somewhere else instead — production sets this to
+a path outside the deployed repo directory (see
+[`docs/dashboard-deployment.md`](docs/dashboard-deployment.md)) so the dashboard's
+saved changes survive `deploy.sh` pulling fresh code.

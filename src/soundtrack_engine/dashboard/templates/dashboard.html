@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="dashboard">
+  <header>
+    <h1>Playlist Dashboard</h1>
+    <form method="post" action="/logout" class="logout-form"><button type="submit">Log out</button></form>
+  </header>
+
+  <nav class="progression-toggle">
+    <a href="/?progression={{ progression }}" class="active">{{ progression | capitalize }}</a>
+    {% if other_progression %}
+    <a href="/?progression={{ other_progression }}">{{ other_progression | capitalize }}</a>
+    {% endif %}
+  </nav>
+
+  <p class="status">
+    Last generated: {{ last_generated.strftime('%b %d, %I:%M %p UTC') if last_generated else 'never' }}
+  </p>
+
+  {% include "_stage_editor.html" %}
+
+  <div class="generate-actions">
+    <button hx-post="/api/generate/{{ progression }}" hx-target="#generate-result"
+            hx-swap="innerHTML" hx-indicator="#generating">
+      Generate {{ progression | capitalize }}
+    </button>
+    {% if other_progression %}
+    <button hx-post="/api/generate/{{ other_progression }}" hx-target="#generate-result"
+            hx-swap="innerHTML" hx-indicator="#generating">
+      Generate {{ other_progression | capitalize }}
+    </button>
+    {% endif %}
+    <span id="generating" class="htmx-indicator">Generating…</span>
+  </div>
+
+  <div id="generate-result"></div>
+</main>
+{% endblock %}

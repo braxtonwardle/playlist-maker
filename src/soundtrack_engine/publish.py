@@ -14,7 +14,7 @@ from soundtrack_engine.config import Config
 from soundtrack_engine.generator import generate_stage
 from soundtrack_engine.history import PlayHistory
 from soundtrack_engine.logging_setup import get_logger
-from soundtrack_engine.models import Track
+from soundtrack_engine.models import StageResult
 from soundtrack_engine.spotify_client import SpotifyClient
 
 logger = get_logger(__name__)
@@ -27,12 +27,13 @@ def rebuild_progression(
     history: PlayHistory,
     rng: Random | None = None,
     now: datetime | None = None,
-) -> list[Track]:
-    """Rebuild one progression (e.g. "morning") end to end. Returns the full track
-    list written to its output playlist, in order.
+) -> list[StageResult]:
+    """Rebuild one progression (e.g. "morning") end to end. Returns each stage's
+    generated tracks, in stage order, tagged with which stage they came from — the
+    same order written to the output playlist.
     """
     progression = config.progressions[progression_key]
-    all_tracks: list[Track] = []
+    results: list[StageResult] = []
 
     for stage in progression.stages:
         pool = client.fetch_playlist_tracks(stage.source_playlist_id)
@@ -45,7 +46,8 @@ def rebuild_progression(
         logger.info("%s/%s: %d tracks from a pool of %d", progression_key, stage.id, len(stage_tracks), len(pool))
 
         history.record_generation(progression_key, stage.id, stage_tracks, when=now)
-        all_tracks.extend(stage_tracks)
+        results.append(StageResult(stage_id=stage.id, stage_name=stage.name, tracks=stage_tracks))
 
-    client.replace_playlist_tracks(progression.output_playlist_id, [t.uri for t in all_tracks])
-    return all_tracks
+    all_uris = [t.uri for result in results for t in result.tracks]
+    client.replace_playlist_tracks(progression.output_playlist_id, all_uris)
+    return results

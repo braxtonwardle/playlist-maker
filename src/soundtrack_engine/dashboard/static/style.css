@@ -1,0 +1,206 @@
+:root {
+  color-scheme: dark light;
+  --bg: #12141a;
+  --surface: #1b1e27;
+  --border: #2a2e3a;
+  --text: #e8e9ed;
+  --muted: #9195a3;
+  --accent: #7c9cff;
+  --error: #ff8787;
+  --success: #7ddba0;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+main {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 3rem;
+}
+
+h1 { font-size: 1.25rem; margin: 0; }
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.login {
+  max-width: 320px;
+  margin: 20vh auto 0;
+  text-align: center;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+label { font-size: 0.85rem; color: var(--muted); text-align: left; }
+
+input[type="password"], input[type="text"] {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+button {
+  background: var(--accent);
+  color: #0b0c10;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.logout-form button {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  font-weight: 400;
+  padding: 0.4rem 0.75rem;
+}
+
+.progression-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.progression-toggle a {
+  flex: 1;
+  text-align: center;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.progression-toggle a.active {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.status { color: var(--muted); font-size: 0.85rem; margin: 0 0 1rem; }
+
+.stage-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 0.6rem;
+}
+
+.stage-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.stage-name { font-weight: 600; font-size: 0.95rem; }
+
+.infinite-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.slider-row.disabled { opacity: 0.4; }
+
+.slider-row input[type="range"] { flex: 1; }
+
+.minutes-readout {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  font-size: 0.85rem;
+  min-width: 3.5rem;
+  text-align: right;
+}
+
+#stage-editor > button[type="submit"] {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.generate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 1.25rem 0 1rem;
+}
+
+.generate-actions button { flex: 1; min-width: 45%; }
+
+.htmx-indicator { opacity: 0; color: var(--muted); font-size: 0.85rem; }
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator { opacity: 1; }
+
+.flash {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin: 0 0 0.75rem;
+}
+
+.flash.success { background: rgba(125, 219, 160, 0.12); color: var(--success); }
+.flash.error { background: rgba(255, 135, 135, 0.12); color: var(--error); }
+
+.track-table-wrap { overflow-x: auto; }
+
+.track-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.track-table th, .track-table td {
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-table th { color: var(--muted); font-weight: 500; }
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f5f6f9;
+    --surface: #ffffff;
+    --border: #e1e3ea;
+    --text: #16181f;
+    --muted: #6b7080;
+  }
+}

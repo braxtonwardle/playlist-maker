@@ -3,7 +3,15 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from soundtrack_engine.config import Config, GeneratorSettings, Progression, Stage, load_config
+from soundtrack_engine.config import (
+    DEFAULT_CONFIG_PATH,
+    Config,
+    GeneratorSettings,
+    Progression,
+    Stage,
+    load_config,
+    resolve_config_path,
+)
 
 EXAMPLE_CONFIG_PATH = Path(__file__).parent.parent / "config" / "config.example.yaml"
 
@@ -101,3 +109,13 @@ def test_generator_settings_reject_non_positive_values() -> None:
 def test_config_requires_at_least_one_progression() -> None:
     with pytest.raises(ValidationError):
         Config(progressions={})
+
+
+def test_resolve_config_path_defaults_to_in_repo_path(monkeypatch) -> None:
+    monkeypatch.delenv("SOUNDTRACK_CONFIG_PATH", raising=False)
+    assert resolve_config_path() == DEFAULT_CONFIG_PATH
+
+
+def test_resolve_config_path_honors_env_override(monkeypatch) -> None:
+    monkeypatch.setenv("SOUNDTRACK_CONFIG_PATH", "/opt/playlist-maker/config.yaml")
+    assert resolve_config_path() == Path("/opt/playlist-maker/config.yaml")

@@ -1,0 +1,28 @@
+<div id="stage-editor">
+  {% if saved %}<p class="flash success">Saved.</p>{% endif %}
+  {% if save_error %}<p class="flash error">{{ save_error }}</p>{% endif %}
+  <form hx-post="/api/config/{{ progression }}" hx-target="#stage-editor" hx-swap="outerHTML">
+    {% for stage in stages %}
+    <div class="stage-row"
+         x-data="{ infinite: {{ 'true' if stage.open_ended else 'false' }}, minutes: {{ stage.target_minutes or 15 }} }">
+      <div class="stage-row-header">
+        <span class="stage-name">{{ stage.name }}</span>
+        {% if loop.first or loop.last %}
+        <label class="infinite-toggle">
+          <input type="checkbox" name="infinite__{{ stage.id }}" x-model="infinite">
+          Infinite
+        </label>
+        {% endif %}
+      </div>
+      <div class="slider-row" :class="{ disabled: infinite }">
+        <input type="range" min="1" max="60" step="1"
+               name="minutes__{{ stage.id }}"
+               x-model.number="minutes"
+               :disabled="infinite">
+        <span class="minutes-readout" x-text="infinite ? '—' : minutes + ' min'"></span>
+      </div>
+    </div>
+    {% endfor %}
+    <button type="submit">Save</button>
+  </form>
+</div>

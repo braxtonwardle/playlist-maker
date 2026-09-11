@@ -25,7 +25,11 @@ class PlayHistory:
     def __init__(self, db_path: str | Path = DEFAULT_DB_PATH) -> None:
         if str(db_path) != ":memory:":
             Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(db_path)
+        # check_same_thread=False: a single PlayHistory instance is only ever used
+        # sequentially within one logical unit of work, but that work can legitimately
+        # hop threads — e.g. FastAPI resolves a sync dependency in a worker thread
+        # while an `async def` route handler runs on the event loop thread.
+        self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._ensure_schema()
 
     def _ensure_schema(self) -> None:
@@ -101,6 +105,18 @@ class PlayHistory:
                 weights.append(_MIN_WEIGHT + (1.0 - _MIN_WEIGHT) * fraction)
 
         return weights
+
+    def last_generated_at(self, progression_key: str) -> datetime | None:
+        """When a progression was last rebuilt — the dashboard's "Last Generated"
+        status, derived from existing play records rather than separate state.
+        """
+        row = self._conn.execute(
+            "SELECT MAX(played_at) FROM plays WHERE progression_key = ?",
+            (progression_key,),
+        ).fetchone()
+        if row is None or row[0] is None:
+            return None
+        return datetime.fromisoformat(row[0])
 
     def close(self) -> None:
         self._conn.close()

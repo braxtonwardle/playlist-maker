@@ -46,9 +46,12 @@ def test_rebuild_progression_writes_concatenated_tracks_to_output_playlist() -> 
     client = FakeSpotifyClient(pools)
     history = PlayHistory(db_path=":memory:")
 
-    result = rebuild_progression("morning", config, client, history, now=NOW)
+    results = rebuild_progression("morning", config, client, history, now=NOW)
 
-    assert [t.uri for t in result] == ["spotify:track:a0", "spotify:track:b0"]
+    assert [(r.stage_id, [t.uri for t in r.tracks]) for r in results] == [
+        ("a", ["spotify:track:a0"]),
+        ("b", ["spotify:track:b0"]),
+    ]
     assert client.replaced["output-1"] == ["spotify:track:a0", "spotify:track:b0"]
 
 
@@ -85,11 +88,15 @@ def test_rebuild_progression_favors_less_recently_played_tracks_on_repeat_runs()
     # than relying on the ~99:1 odds (1.0 vs the 0.01 floor weight) to always land
     # the same way.
     first_run = rebuild_progression("morning", config, client, history, rng=Random(1), now=NOW)
-    first_pick_uri = next(t.uri for t in first_run if t.uri.startswith("spotify:track:a"))
+    first_pick_uri = next(
+        t.uri for r in first_run for t in r.tracks if t.uri.startswith("spotify:track:a")
+    )
 
     # Immediately rebuild again: the just-used track for stage "a" should be heavily
     # deprioritized, so with only two candidates the other one should win instead.
     second_run = rebuild_progression("morning", config, client, history, rng=Random(2), now=NOW)
-    second_pick_uri = next(t.uri for t in second_run if t.uri.startswith("spotify:track:a"))
+    second_pick_uri = next(
+        t.uri for r in second_run for t in r.tracks if t.uri.startswith("spotify:track:a")
+    )
 
     assert second_pick_uri != first_pick_uri

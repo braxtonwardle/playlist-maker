@@ -12,6 +12,7 @@ config never lists songs.
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -19,6 +20,18 @@ import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 _STAGE_ID_PATTERN = re.compile(r"[a-z0-9_]+")
+
+DEFAULT_CONFIG_PATH = Path("config/config.yaml")
+
+
+def resolve_config_path() -> Path:
+    """Where the live config actually lives. Defaults to the in-repo path (local
+    dev), but SOUNDTRACK_CONFIG_PATH overrides it — deployed environments point this
+    at a path outside the repo checkout, so `deploy.sh` pulling a fresh tarball of
+    `main` over the deploy directory never touches the dashboard's saved settings.
+    """
+    override = os.environ.get("SOUNDTRACK_CONFIG_PATH")
+    return Path(override) if override else DEFAULT_CONFIG_PATH
 
 
 class Stage(BaseModel):

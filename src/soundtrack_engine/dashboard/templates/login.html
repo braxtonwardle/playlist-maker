@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Log in — Playlist Dashboard{% endblock %}
+{% block content %}
+<main class="login">
+  <h1>Playlist Dashboard</h1>
+  <form method="post" action="/login" class="login-form">
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" autocomplete="current-password" autofocus required>
+    <button type="submit">Log in</button>
+  </form>
+</main>
+{% endblock %}

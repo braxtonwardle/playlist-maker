@@ -1,0 +1,31 @@
+{% if error %}
+<div class="generate-result">
+  <p class="flash error">Generate failed for {{ progression }}: {{ error }}</p>
+</div>
+{% else %}
+<div class="generate-result">
+  <p class="flash success">
+    Generated {{ progression }}{% if last_generated %} — last generated
+    {{ last_generated.strftime('%b %d, %I:%M %p UTC') }}{% endif %}.
+  </p>
+  <div class="track-table-wrap">
+    <table class="track-table">
+      <thead>
+        <tr><th>Song</th><th>Artist</th><th>Bucket</th><th>Duration</th></tr>
+      </thead>
+      <tbody>
+        {% for result in results %}
+          {% for track in result.tracks %}
+          <tr>
+            <td>{{ track.name or track.uri }}</td>
+            <td>{{ track.artists | join(', ') }}</td>
+            <td>{{ result.stage_name }}</td>
+            <td>{{ '%d:%02d' % ((track.duration_ms // 1000) // 60, (track.duration_ms // 1000) % 60) }}</td>
+          </tr>
+          {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}

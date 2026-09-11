@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import getpass
 import sys
 from pathlib import Path
 
@@ -11,7 +12,7 @@ import yaml
 from dotenv import load_dotenv
 
 from soundtrack_engine.bootstrap import bootstrap_playlists
-from soundtrack_engine.config import load_config
+from soundtrack_engine.config import load_config, resolve_config_path
 from soundtrack_engine.history import PlayHistory
 from soundtrack_engine.logging_setup import configure_logging
 from soundtrack_engine.publish import rebuild_progression
@@ -20,7 +21,6 @@ from soundtrack_engine.spotify_auth import MissingCredentialsError
 from soundtrack_engine.spotify_auth import login as spotify_login
 
 DEFAULT_REDIRECT_URI = "http://127.0.0.1:8888/callback"
-CONFIG_PATH = Path("config/config.yaml")
 CONFIG_EXAMPLE_PATH = Path("config/config.example.yaml")
 
 
@@ -40,9 +40,10 @@ def _cmd_show_playlist(args: argparse.Namespace) -> None:
 
 def _cmd_bootstrap_playlists(args: argparse.Namespace) -> None:
     """Create any playlist config.yaml references but doesn't have an id for yet."""
-    source_path = CONFIG_PATH if CONFIG_PATH.exists() else CONFIG_EXAMPLE_PATH
+    config_path = resolve_config_path()
+    source_path = config_path if config_path.exists() else CONFIG_EXAMPLE_PATH
     if source_path is CONFIG_EXAMPLE_PATH:
-        print(f"No {CONFIG_PATH} yet — starting from {CONFIG_EXAMPLE_PATH}")
+        print(f"No {config_path} yet — starting from {CONFIG_EXAMPLE_PATH}")
 
     config = load_config(source_path)
     client = SpotifyApiClient()
@@ -50,7 +51,8 @@ def _cmd_bootstrap_playlists(args: argparse.Namespace) -> None:
 
     created = bootstrap_playlists(config, client, user_id)
 
-    CONFIG_PATH.write_text(
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(
         yaml.safe_dump(config.model_dump(mode="python"), sort_keys=False),
         encoding="utf-8",
     )
@@ -61,16 +63,17 @@ def _cmd_bootstrap_playlists(args: argparse.Namespace) -> None:
             print(f"  {name}: {playlist_id}")
     else:
         print("Nothing to create — every stage and output already has a playlist id.")
-    print(f"Wrote {CONFIG_PATH}")
+    print(f"Wrote {config_path}")
 
 
 def _cmd_generate(args: argparse.Namespace) -> None:
     """Rebuild one progression's output playlist from its current stage pools."""
-    config = load_config(CONFIG_PATH)
+    config = load_config(resolve_config_path())
     client = SpotifyApiClient()
     history = PlayHistory()
 
-    tracks = rebuild_progression(args.progression, config, client, history)
+    results = rebuild_progression(args.progression, config, client, history)
+    tracks = [t for result in results for t in result.tracks]
 
     minutes, seconds = divmod(sum(t.duration_ms for t in tracks) // 1000, 60)
     progression = config.progressions[args.progression]
@@ -78,6 +81,21 @@ def _cmd_generate(args: argparse.Namespace) -> None:
         f"Wrote {len(tracks)} tracks ({minutes}m{seconds:02d}s) to "
         f"\"{progression.output_playlist_name}\""
     )
+
+
+def _cmd_hash_password(args: argparse.Namespace) -> None:
+    """Prompt for the dashboard password and print its bcrypt hash to store as
+    DASHBOARD_PASSWORD_HASH — never printed or logged in plaintext.
+    """
+    from soundtrack_engine.dashboard.auth import hash_password
+
+    password = getpass.getpass("Dashboard password: ")
+    confirm = getpass.getpass("Confirm: ")
+    if password != confirm:
+        print("Error: passwords didn't match", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"DASHBOARD_PASSWORD_HASH={hash_password(password)}")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -107,6 +125,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     generate_parser.add_argument("progression", choices=["morning", "night"])
     generate_parser.set_defaults(func=_cmd_generate)
+
+    hash_password_parser = subparsers.add_parser(
+        "hash-password",
+        help="Hash a password for the dashboard's DASHBOARD_PASSWORD_HASH env var",
+    )
+    hash_password_parser.set_defaults(func=_cmd_hash_password)
 
     return parser
 

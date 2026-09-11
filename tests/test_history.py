@@ -88,6 +88,28 @@ def test_record_generation_covers_multiple_tracks() -> None:
     assert weights == [pytest.approx(0.01, abs=1e-9), pytest.approx(0.01, abs=1e-9)]
 
 
+def test_last_generated_at_returns_none_when_never_generated() -> None:
+    history = _history()
+    assert history.last_generated_at("morning") is None
+
+
+def test_last_generated_at_returns_most_recent_run_across_stages() -> None:
+    history = _history()
+    track = Track(uri="spotify:track:1", duration_ms=200_000)
+    history.record_generation("morning", "wake", [track], when=NOW - timedelta(days=1))
+    history.record_generation("morning", "groove", [track], when=NOW)
+
+    assert history.last_generated_at("morning") == NOW
+
+
+def test_last_generated_at_is_scoped_by_progression() -> None:
+    history = _history()
+    track = Track(uri="spotify:track:1", duration_ms=200_000)
+    history.record_generation("night", "soft_landing", [track], when=NOW)
+
+    assert history.last_generated_at("morning") is None
+
+
 def test_context_manager_closes_connection() -> None:
     with PlayHistory(db_path=":memory:") as history:
         history.record_generation("morning", "wake", [], when=NOW)

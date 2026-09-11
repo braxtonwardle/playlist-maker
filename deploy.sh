@@ -60,4 +60,15 @@ else
   echo "Dependencies unchanged, skipping pip install."
 fi
 
+# The dashboard (if installed — see docs/dashboard-deployment.md) is a long-running
+# process, unlike the one-shot `generate` commands: it won't pick up new code just
+# because the files on disk changed underneath it, so restart it here. Uses a
+# user-level systemd unit (no sudo needed). Safe to leave this in even before the
+# dashboard is set up — `systemctl --user restart` on a unit that isn't installed
+# just fails quietly.
+if systemctl --user list-unit-files playlist-dashboard.service &>/dev/null; then
+  echo "Restarting playlist-dashboard.service..."
+  systemctl --user restart playlist-dashboard.service
+fi
+
 echo "Deploy complete."

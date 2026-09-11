@@ -28,6 +28,7 @@ from soundtrack_engine.dashboard.dependencies import (
     get_spotify_client,
 )
 from soundtrack_engine.dashboard.security import require_auth
+from soundtrack_engine.dashboard.theme import stage_colors_for
 from soundtrack_engine.history import PlayHistory
 from soundtrack_engine.publish import rebuild_progression
 from soundtrack_engine.spotify_client import SpotifyClient
@@ -45,11 +46,13 @@ def _other_progression(config: Config, progression: str) -> str | None:
 def _dashboard_context(request: Request, progression: str, config: Config, history: PlayHistory) -> dict:
     if progression not in config.progressions:
         progression = next(iter(config.progressions))
+    stages = config.progressions[progression].stages
     return {
         "request": request,
         "progression": progression,
         "other_progression": _other_progression(config, progression),
-        "stages": config.progressions[progression].stages,
+        "stages": stages,
+        "stage_colors": stage_colors_for([stage.id for stage in stages]),
         "last_generated": history.last_generated_at(progression),
     }
 
@@ -178,11 +181,13 @@ def generate(
             status_code=status.HTTP_502_BAD_GATEWAY,
         )
 
+    stage_colors = stage_colors_for([stage.id for stage in config.progressions[progression].stages])
     return templates.TemplateResponse(
         request,
         "_generate_result.html",
         {
             "results": results,
+            "stage_colors": stage_colors,
             "progression": progression,
             "last_generated": history.last_generated_at(progression),
         },

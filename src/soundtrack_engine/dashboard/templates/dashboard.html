@@ -1,38 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
-<main class="dashboard">
-  <header>
-    <h1>Playlist Dashboard</h1>
+<div class="wrap">
+  <header class="app-header">
+    <div>
+      <h1 class="app-title">Playlist Dashboard</h1>
+      <p class="app-sub">Last generated: {{ last_generated.strftime('%b %d, %I:%M %p UTC') if last_generated else 'never' }}</p>
+    </div>
     <form method="post" action="/logout" class="logout-form"><button type="submit">Log out</button></form>
   </header>
 
-  <nav class="progression-toggle">
-    <a href="/?progression={{ progression }}" class="active">{{ progression | capitalize }}</a>
+  <nav class="mode-row">
+    <a href="/?progression={{ progression }}" class="mode-btn active">{{ progression | capitalize }}</a>
     {% if other_progression %}
-    <a href="/?progression={{ other_progression }}">{{ other_progression | capitalize }}</a>
+    <a href="/?progression={{ other_progression }}" class="mode-btn">{{ other_progression | capitalize }}</a>
     {% endif %}
   </nav>
 
-  <p class="status">
-    Last generated: {{ last_generated.strftime('%b %d, %I:%M %p UTC') if last_generated else 'never' }}
-  </p>
-
   {% include "_stage_editor.html" %}
 
-  <div class="generate-actions">
-    <button hx-post="/api/generate/{{ progression }}" hx-target="#generate-result"
+  <div class="home-actions-row">
+    <button class="primary-btn" hx-post="/api/generate/{{ progression }}" hx-target="#generate-result"
             hx-swap="innerHTML" hx-indicator="#generating">
       Generate {{ progression | capitalize }}
     </button>
     {% if other_progression %}
-    <button hx-post="/api/generate/{{ other_progression }}" hx-target="#generate-result"
+    <button class="primary-btn" hx-post="/api/generate/{{ other_progression }}" hx-target="#generate-result"
             hx-swap="innerHTML" hx-indicator="#generating">
       Generate {{ other_progression | capitalize }}
     </button>
     {% endif %}
-    <span id="generating" class="htmx-indicator">Generating…</span>
   </div>
+  <p id="generating" class="htmx-indicator">Generating…</p>
 
   <div id="generate-result"></div>
-</main>
+</div>
 {% endblock %}

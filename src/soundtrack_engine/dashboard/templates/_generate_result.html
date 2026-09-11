@@ -8,24 +8,31 @@
     Generated {{ progression }}{% if last_generated %} — last generated
     {{ last_generated.strftime('%b %d, %I:%M %p UTC') }}{% endif %}.
   </p>
-  <div class="track-table-wrap">
-    <table class="track-table">
-      <thead>
-        <tr><th>Song</th><th>Artist</th><th>Bucket</th><th>Duration</th></tr>
-      </thead>
-      <tbody>
-        {% for result in results %}
-          {% for track in result.tracks %}
-          <tr>
-            <td>{{ track.name or track.uri }}</td>
-            <td>{{ track.artists | join(', ') }}</td>
-            <td>{{ result.stage_name }}</td>
-            <td>{{ '%d:%02d' % ((track.duration_ms // 1000) // 60, (track.duration_ms // 1000) % 60) }}</td>
-          </tr>
-          {% endfor %}
-        {% endfor %}
-      </tbody>
-    </table>
+
+  <div class="stage-legend">
+    {% for result in results %}
+    <span class="stage-legend-item">
+      <span class="stage-legend-dot" style="--stage-color: {{ stage_colors[result.stage_id] }}"></span>
+      {{ result.stage_name }}
+    </span>
+    {% endfor %}
+  </div>
+
+  <div class="track-list">
+    {% for result in results %}
+      {% for track in result.tracks %}
+      <div class="track-row" style="--stage-color: {{ stage_colors[result.stage_id] }}">
+        <div class="track-main">
+          <div class="track-song">{{ track.name or track.uri }}</div>
+          <div class="track-artist">{{ track.artists | join(', ') }}</div>
+        </div>
+        <div class="track-meta">
+          <span class="track-bucket">{{ result.stage_name }}</span>
+          <span class="track-duration">{{ '%d:%02d' % ((track.duration_ms // 1000) // 60, (track.duration_ms // 1000) % 60) }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    {% endfor %}
   </div>
 </div>
 {% endif %}

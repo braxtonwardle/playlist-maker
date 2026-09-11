@@ -3,12 +3,13 @@
   {% if save_error %}<p class="flash error">{{ save_error }}</p>{% endif %}
   <form hx-post="/api/config/{{ progression }}" hx-target="#stage-editor" hx-swap="outerHTML">
     {% for stage in stages %}
-    <div class="stage-row"
+    <div class="stage-card"
+         style="--stage-color: {{ stage_colors[stage.id] }}"
          x-data="{ infinite: {{ 'true' if stage.open_ended else 'false' }}, minutes: {{ stage.target_minutes or 15 }} }">
-      <div class="stage-row-header">
+      <div class="stage-card-header">
         <span class="stage-name">{{ stage.name }}</span>
         {% if loop.first or loop.last %}
-        <label class="infinite-toggle">
+        <label class="persist-check">
           <input type="checkbox" name="infinite__{{ stage.id }}" x-model="infinite">
           Infinite
         </label>
@@ -23,6 +24,8 @@
       </div>
     </div>
     {% endfor %}
-    <button type="submit">Save</button>
+    <div class="stage-form-actions">
+      <button type="submit" class="primary-btn">Save</button>
+    </div>
   </form>
 </div>

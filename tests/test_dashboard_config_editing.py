@@ -1,3 +1,5 @@
+import time
+
 import pytest
 from pydantic import ValidationError
 
@@ -6,6 +8,7 @@ from soundtrack_engine.dashboard.config_editing import (
     StageEditNotAllowed,
     StageUpdate,
     apply_stage_updates,
+    backup_config,
 )
 
 
@@ -94,3 +97,47 @@ def test_non_positive_minutes_rejected_by_stage_validation() -> None:
 
     with pytest.raises(ValidationError):
         apply_stage_updates(progression, updates)
+
+
+def test_backup_config_returns_none_when_nothing_to_back_up(tmp_path) -> None:
+    config_path = tmp_path / "config.yaml"  # doesn't exist yet
+
+    assert backup_config(config_path) is None
+    assert not (tmp_path / "backups").exists()
+
+
+def test_backup_config_copies_current_content_into_backups_dir(tmp_path) -> None:
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("progressions: {}\n", encoding="utf-8")
+
+    backup_path = backup_config(config_path)
+
+    assert backup_path is not None
+    assert backup_path.parent == tmp_path / "backups"
+    assert backup_path.read_text(encoding="utf-8") == "progressions: {}\n"
+    assert backup_path.name.startswith("config.")
+    assert backup_path.suffix == ".yaml"
+
+
+def test_backup_config_does_not_touch_the_live_file(tmp_path) -> None:
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("original\n", encoding="utf-8")
+
+    backup_config(config_path)
+
+    assert config_path.read_text(encoding="utf-8") == "original\n"
+
+
+def test_backup_config_multiple_saves_produce_multiple_backups(tmp_path) -> None:
+    config_path = tmp_path / "config.yaml"
+
+    config_path.write_text("version-1\n", encoding="utf-8")
+    first_backup = backup_config(config_path)
+    time.sleep(0.001)  # ensure a distinct microsecond-precision timestamp
+    config_path.write_text("version-2\n", encoding="utf-8")
+    second_backup = backup_config(config_path)
+
+    assert first_backup != second_backup
+    assert first_backup.read_text(encoding="utf-8") == "version-1\n"
+    assert second_backup.read_text(encoding="utf-8") == "version-2\n"
+    assert len(list((tmp_path / "backups").iterdir())) == 2

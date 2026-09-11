@@ -6,7 +6,10 @@ mutual exclusivity) rather than re-implementing those rules here.
 
 from __future__ import annotations
 
+import shutil
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 
 from soundtrack_engine.config import Progression, Stage
 
@@ -55,3 +58,20 @@ def apply_stage_updates(progression: Progression, updates: list[StageUpdate]) ->
         )
 
     return progression.model_copy(update={"stages": new_stages})
+
+
+def backup_config(config_path: Path) -> Path | None:
+    """Copy the current config file into a `backups/` folder next to it before a
+    Save overwrites it, so a bad edit is always one file-copy away from undone.
+    Returns the backup's path, or None if there was nothing to back up yet (the
+    very first save, before config_path exists).
+    """
+    if not config_path.exists():
+        return None
+
+    backup_dir = config_path.parent / "backups"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    backup_path = backup_dir / f"{config_path.stem}.{timestamp}{config_path.suffix}"
+    shutil.copy2(config_path, backup_path)
+    return backup_path

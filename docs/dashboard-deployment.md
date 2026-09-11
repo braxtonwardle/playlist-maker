@@ -157,9 +157,9 @@ systemctl --user status cloudflared          # active (running)
 ```
 
 Then from your phone: load `https://dashboard.yourdomain.com/login`, log in, confirm
-the stage sliders show your current config, and try **Generate Morning** / **Generate
-Night** — each should publish to Spotify and show the resulting track list (Song /
-Artist / Bucket / Duration) inline.
+the page loads with the current live playlist for Ascent/Descent, and try the refresh
+(↻) button — it should publish to Spotify and swap in the newly generated track list
+(Song / Artist / Bucket / Duration) inline.
 
 ## Notes
 

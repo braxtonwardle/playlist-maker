@@ -20,6 +20,7 @@ from soundtrack_engine.dashboard.config_editing import (
     StageEditNotAllowed,
     StageUpdate,
     apply_stage_updates,
+    backup_config,
 )
 from soundtrack_engine.dashboard.dependencies import (
     get_config,
@@ -173,6 +174,7 @@ async def save_config(
         )
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
+    backup_config(config_path)
     config_path.write_text(
         yaml.safe_dump(config.model_dump(mode="python"), sort_keys=False), encoding="utf-8"
     )

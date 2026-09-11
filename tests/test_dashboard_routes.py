@@ -170,6 +170,22 @@ def test_save_config_updates_yaml_on_disk(dashboard) -> None:
     assert stages["fun"]["open_ended"] is True
 
 
+def test_save_config_backs_up_previous_version_before_overwriting(dashboard) -> None:
+    client, config_path, _ = dashboard
+    _login(client)
+    original_content = config_path.read_text()
+
+    response = client.post(
+        "/api/config/morning",
+        data={"minutes__wake": "20", "minutes__groove": "11", "infinite__fun": "on"},
+    )
+    assert response.status_code == 200
+
+    backups = list((config_path.parent / "backups").iterdir())
+    assert len(backups) == 1
+    assert backups[0].read_text() == original_content  # the pre-save version, not the new one
+
+
 def test_save_config_rejects_infinite_on_middle_stage(dashboard) -> None:
     client, config_path, _ = dashboard
     _login(client)

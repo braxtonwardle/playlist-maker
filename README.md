@@ -161,6 +161,11 @@ repo-scoped fine-grained PAT) wherever cron runs — `deploy.sh` picks it up aut
   `stage_id`/`stage_name` (`models.StageResult`) instead of one flat list, and `Track`
   carries `name`/`artists` — both purely so the dashboard can show a Song/Artist/Bucket
   table straight from a generation run, no extra Spotify lookup needed.
+- `publish.current_playlist()` — a read-only counterpart to `rebuild_progression()`:
+  reads back what's actually live in the output playlist right now (no picks, no
+  writes) so the dashboard can show it on page load, not just after a fresh generate.
+- Every Save backs up the previous `config.yaml` into a `backups/` folder next to it
+  (`dashboard.config_editing.backup_config()`) before writing the new one.
 - `tests/test_dashboard_auth.py`, `tests/test_dashboard_config_editing.py`,
   `tests/test_dashboard_routes.py`, `tests/test_dashboard_static.py` — unit/route tests
   (`fastapi.testclient.TestClient` for routes, a fake `SpotifyClient` for generation);
@@ -169,6 +174,9 @@ repo-scoped fine-grained PAT) wherever cron runs — `deploy.sh` picks it up aut
   alongside the existing cron setup: moving the live config out of the repo directory,
   a systemd user service so the dashboard survives across deploys, and exposing it
   through a Cloudflare Tunnel (no inbound port opened on the VM).
+- [`docs/operations.md`](docs/operations.md) — day-to-day reference once that's set up:
+  deploying/updating, changing the dashboard password, rotating Spotify credentials,
+  restoring a config backup, where everything lives on disk, and restarting services.
 
 ## Setup (development)
 

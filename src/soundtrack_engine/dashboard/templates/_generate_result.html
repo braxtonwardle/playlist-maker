@@ -1,11 +1,11 @@
 {% if error %}
 <div class="generate-result">
-  <p class="flash error">Generate failed for {{ progression }}: {{ error }}</p>
+  <p class="flash error">Generate failed for {{ progression_label }}: {{ error }}</p>
 </div>
 {% else %}
 <div class="generate-result">
   <p class="flash success">
-    Generated {{ progression }}{% if last_generated %} — last generated
+    Generated {{ progression_label }}{% if last_generated %} — last generated
     {{ last_generated.strftime('%b %d, %I:%M %p UTC') }}{% endif %}.
   </p>
 

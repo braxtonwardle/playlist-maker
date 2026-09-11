@@ -144,7 +144,7 @@ def test_dashboard_page_renders_stages_when_authenticated(dashboard) -> None:
     assert response.status_code == 200
     assert "Wake" in response.text
     assert "Groove" in response.text
-    assert "Night" in response.text  # the other-progression toggle link
+    assert "Descent" in response.text  # the other-progression toggle link (Night -> Descent)
 
 
 def test_save_config_updates_yaml_on_disk(dashboard) -> None:

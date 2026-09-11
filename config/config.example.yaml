@@ -22,23 +22,23 @@ progressions:
     output_playlist_id: ""
     stages:
       - id: wake_cinematic
-        name: "Wake / Cinematic"
+        name: "Wake"
         source_playlist_id: ""
         target_minutes: 15
       - id: groove
-        name: "Groove / Getting moving"
+        name: "Groove"
         source_playlist_id: ""
         target_minutes: 11
       - id: warm
-        name: "Warm / Easy"
+        name: "Warm-up"
         source_playlist_id: ""
         target_minutes: 12
       - id: building_energy
-        name: "Building energy"
+        name: "Building"
         source_playlist_id: ""
         target_minutes: 14
       - id: full_send_fun
-        name: "Full send / Fun"
+        name: "Full Send"
         source_playlist_id: ""
         open_ended: true
 
@@ -47,22 +47,22 @@ progressions:
     output_playlist_id: ""
     stages:
       - id: soft_landing
-        name: "Soft landing"
+        name: "Soft Landing"
         source_playlist_id: ""
         target_minutes: 10
       - id: reflective_emotional
-        name: "Reflective / emotional"
+        name: "Reflective"
         source_playlist_id: ""
         target_minutes: 10
       - id: deepening_atmospheric
-        name: "Deepening / atmospheric"
+        name: "Atmospheric"
         source_playlist_id: ""
         target_minutes: 12
       - id: instrumental_descent
-        name: "Instrumental descent"
+        name: "Instrumental Descent"
         source_playlist_id: ""
         target_minutes: 10
       - id: reading_journaling
-        name: "Reading / journaling"
+        name: "Calm in Bed"
         source_playlist_id: ""
         open_ended: true

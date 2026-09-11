@@ -38,16 +38,16 @@ def test_example_config_stage_ids_and_names_in_order() -> None:
         "full_send_fun",
     ]
     assert [s.name for s in morning_stages] == [
-        "Wake / Cinematic",
-        "Groove / Getting moving",
-        "Warm / Easy",
-        "Building energy",
-        "Full send / Fun",
+        "Wake",
+        "Groove",
+        "Warm-up",
+        "Building",
+        "Full Send",
     ]
 
     night_stages = config.progressions["night"].stages
     assert night_stages[-1].id == "reading_journaling"
-    assert night_stages[-1].name == "Reading / journaling"
+    assert night_stages[-1].name == "Calm in Bed"
 
 
 def test_night_reading_stage_is_open_ended_with_no_duration() -> None:

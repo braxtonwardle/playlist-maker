@@ -66,14 +66,25 @@ body {
   font-family: inherit; margin-top: 8px;
 }
 
-/* ---------- progression toggle ---------- */
-.mode-row { display: flex; gap: 8px; margin-bottom: 14px; }
+/* ---------- progression toggle + generate ---------- */
+.toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.mode-row { display: flex; gap: 8px; flex: 1; }
 .mode-btn {
   flex: 1; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line2);
   background: transparent; color: var(--muted); font-size: 13.5px; cursor: pointer;
   font-family: inherit; text-decoration: none; text-align: center; display: block;
 }
 .mode-btn.active { background: var(--panel); color: var(--ink); border-color: var(--gold); }
+
+.generate-btn {
+  flex: none; width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--line2); background: transparent; color: var(--gold);
+  font-size: 19px; line-height: 1; cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; justify-content: center;
+}
+.generate-btn:active { border-color: var(--gold); }
+.generate-btn.htmx-request { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .panel { background: var(--panel); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
 .tiny { color: var(--muted2); font-size: 11px; line-height: 1.4; }
@@ -116,10 +127,8 @@ input[type="range"]::-moz-range-thumb {
 
 .stage-form-actions { margin-top: 4px; }
 
-/* ---------- generate actions ---------- */
-.home-actions-row { display: flex; gap: 8px; margin: 16px 0 10px; }
-.home-actions-row .primary-btn { flex: 1; margin-top: 0; }
-.htmx-indicator { opacity: 0; color: var(--muted2); font-size: 11.5px; text-align: center; margin-top: -2px; }
+/* ---------- generate status ---------- */
+.htmx-indicator { opacity: 0; color: var(--muted2); font-size: 11.5px; text-align: center; margin: 8px 0 0; }
 .htmx-request .htmx-indicator, .htmx-request.htmx-indicator { opacity: 1; }
 
 /* ---------- flash / status ---------- */

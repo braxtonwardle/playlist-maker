@@ -37,6 +37,17 @@ router = APIRouter()
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
 
+# Display labels only — output_playlist_name already reads "Today's Ascent" /
+# "Tonight's Descent"; this just carries that naming into the toggle/buttons too.
+# The underlying progression keys ("morning"/"night") are unchanged: they're what
+# the CLI, cron jobs, and history.db rows key on, so renaming them would break the
+# already-deployed cron commands and reset no-repeat history.
+PROGRESSION_LABELS = {"morning": "Ascent", "night": "Descent"}
+
+
+def _progression_label(key: str) -> str:
+    return PROGRESSION_LABELS.get(key, key.capitalize())
+
 
 def _other_progression(config: Config, progression: str) -> str | None:
     others = [key for key in config.progressions if key != progression]
@@ -46,11 +57,14 @@ def _other_progression(config: Config, progression: str) -> str | None:
 def _dashboard_context(request: Request, progression: str, config: Config, history: PlayHistory) -> dict:
     if progression not in config.progressions:
         progression = next(iter(config.progressions))
+    other_progression = _other_progression(config, progression)
     stages = config.progressions[progression].stages
     return {
         "request": request,
         "progression": progression,
-        "other_progression": _other_progression(config, progression),
+        "progression_label": _progression_label(progression),
+        "other_progression": other_progression,
+        "other_progression_label": _progression_label(other_progression) if other_progression else None,
         "stages": stages,
         "stage_colors": stage_colors_for([stage.id for stage in stages]),
         "last_generated": history.last_generated_at(progression),
@@ -177,7 +191,11 @@ def generate(
         return templates.TemplateResponse(
             request,
             "_generate_result.html",
-            {"error": str(error), "progression": progression},
+            {
+                "error": str(error),
+                "progression": progression,
+                "progression_label": _progression_label(progression),
+            },
             status_code=status.HTTP_502_BAD_GATEWAY,
         )
 
@@ -189,6 +207,7 @@ def generate(
             "results": results,
             "stage_colors": stage_colors,
             "progression": progression,
+            "progression_label": _progression_label(progression),
             "last_generated": history.last_generated_at(progression),
         },
     )

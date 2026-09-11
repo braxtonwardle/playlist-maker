@@ -9,27 +9,21 @@
     <form method="post" action="/logout" class="logout-form"><button type="submit">Log out</button></form>
   </header>
 
-  <nav class="mode-row">
-    <a href="/?progression={{ progression }}" class="mode-btn active">{{ progression | capitalize }}</a>
-    {% if other_progression %}
-    <a href="/?progression={{ other_progression }}" class="mode-btn">{{ other_progression | capitalize }}</a>
-    {% endif %}
-  </nav>
+  <div class="toggle-row">
+    <nav class="mode-row">
+      <a href="/?progression={{ progression }}" class="mode-btn active">{{ progression_label }}</a>
+      {% if other_progression %}
+      <a href="/?progression={{ other_progression }}" class="mode-btn">{{ other_progression_label }}</a>
+      {% endif %}
+    </nav>
+    <button class="generate-btn" type="button" title="Generate {{ progression_label }}"
+            aria-label="Generate {{ progression_label }}"
+            hx-post="/api/generate/{{ progression }}" hx-target="#generate-result"
+            hx-swap="innerHTML" hx-indicator="#generating">↻</button>
+  </div>
 
   {% include "_stage_editor.html" %}
 
-  <div class="home-actions-row">
-    <button class="primary-btn" hx-post="/api/generate/{{ progression }}" hx-target="#generate-result"
-            hx-swap="innerHTML" hx-indicator="#generating">
-      Generate {{ progression | capitalize }}
-    </button>
-    {% if other_progression %}
-    <button class="primary-btn" hx-post="/api/generate/{{ other_progression }}" hx-target="#generate-result"
-            hx-swap="innerHTML" hx-indicator="#generating">
-      Generate {{ other_progression | capitalize }}
-    </button>
-    {% endif %}
-  </div>
   <p id="generating" class="htmx-indicator">Generating…</p>
 
   <div id="generate-result"></div>

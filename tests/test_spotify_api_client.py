@@ -21,7 +21,7 @@ def test_fetch_playlist_tracks_paginates_and_skips_local_or_missing_tracks() -> 
                     "duration_ms": 100,
                     "is_local": False,
                     "name": "Song One",
-                    "artists": [{"name": "Artist A"}],
+                    "artists": [{"id": "artist-a", "name": "Artist A"}, {"id": "artist-b", "name": "Artist B"}],
                 }
             },
             {"item": {"uri": "spotify:track:2", "duration_ms": 200, "is_local": True}},
@@ -38,7 +38,7 @@ def test_fetch_playlist_tracks_paginates_and_skips_local_or_missing_tracks() -> 
                     "duration_ms": 300,
                     "is_local": False,
                     "name": "Song Three",
-                    "artists": [{"name": "Artist B"}, {"name": "Artist C"}],
+                    "artists": [],
                 }
             },
             {"item": None},
@@ -53,13 +53,14 @@ def test_fetch_playlist_tracks_paginates_and_skips_local_or_missing_tracks() -> 
         tracks = _client().fetch_playlist_tracks("playlist123")
 
     assert tracks == [
-        Track(uri="spotify:track:1", duration_ms=100, name="Song One", artists=["Artist A"]),
         Track(
-            uri="spotify:track:3",
-            duration_ms=300,
-            name="Song Three",
-            artists=["Artist B", "Artist C"],
+            uri="spotify:track:1",
+            duration_ms=100,
+            name="Song One",
+            artists=["Artist A", "Artist B"],
+            artist_id="artist-a",
         ),
+        Track(uri="spotify:track:3", duration_ms=300, name="Song Three", artists=[], artist_id=""),
     ]
     assert mock_get.call_count == 2
 

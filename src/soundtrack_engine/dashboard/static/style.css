@@ -66,9 +66,8 @@ body {
   font-family: inherit; margin-top: 8px;
 }
 
-/* ---------- progression toggle + generate ---------- */
-.toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
-.mode-row { display: flex; gap: 8px; flex: 1; }
+/* ---------- progression toggle ---------- */
+.mode-row { display: flex; gap: 8px; margin-bottom: 14px; }
 .mode-btn {
   flex: 1; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line2);
   background: transparent; color: var(--muted); font-size: 13.5px; cursor: pointer;
@@ -125,7 +124,8 @@ input[type="range"]::-moz-range-thumb {
   min-width: 3.6rem; text-align: right; flex: none;
 }
 
-.stage-form-actions { margin-top: 4px; }
+.stage-form-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.stage-form-actions .ghost-btn { width: auto; flex: 1; margin-top: 0; }
 
 /* ---------- generate status ---------- */
 .htmx-indicator { opacity: 0; color: var(--muted2); font-size: 11.5px; text-align: center; margin: 8px 0 0; }

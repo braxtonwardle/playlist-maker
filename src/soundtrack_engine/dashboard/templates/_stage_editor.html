@@ -25,7 +25,11 @@
     </div>
     {% endfor %}
     <div class="stage-form-actions">
-      <button type="submit" class="primary-btn">Save</button>
+      <button type="submit" class="ghost-btn">Save</button>
+      <button class="generate-btn" type="button" title="Generate {{ progression_label }}"
+              aria-label="Generate {{ progression_label }}"
+              hx-post="/api/generate/{{ progression }}" hx-target="#generate-result"
+              hx-swap="innerHTML" hx-indicator="#generating">↻</button>
     </div>
   </form>
 </div>

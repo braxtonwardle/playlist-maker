@@ -9,18 +9,12 @@
     <form method="post" action="/logout" class="logout-form"><button type="submit">Log out</button></form>
   </header>
 
-  <div class="toggle-row">
-    <nav class="mode-row">
-      <a href="/?progression={{ progression }}" class="mode-btn active">{{ progression_label }}</a>
-      {% if other_progression %}
-      <a href="/?progression={{ other_progression }}" class="mode-btn">{{ other_progression_label }}</a>
-      {% endif %}
-    </nav>
-    <button class="generate-btn" type="button" title="Generate {{ progression_label }}"
-            aria-label="Generate {{ progression_label }}"
-            hx-post="/api/generate/{{ progression }}" hx-target="#generate-result"
-            hx-swap="innerHTML" hx-indicator="#generating">↻</button>
-  </div>
+  <nav class="mode-row">
+    <a href="/?progression={{ progression }}" class="mode-btn active">{{ progression_label }}</a>
+    {% if other_progression %}
+    <a href="/?progression={{ other_progression }}" class="mode-btn">{{ other_progression_label }}</a>
+    {% endif %}
+  </nav>
 
   {% include "_stage_editor.html" %}
 

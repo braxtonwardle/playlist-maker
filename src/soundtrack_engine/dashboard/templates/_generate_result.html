@@ -1,11 +1,11 @@
-{% if error %}
+{% if error_message %}
 <div class="generate-result">
-  <p class="flash error">Generate failed for {{ progression_label }}: {{ error }}</p>
+  <p class="flash error">{{ error_message }}</p>
 </div>
-{% else %}
+{% elif results %}
 <div class="generate-result">
   <p class="flash success">
-    Generated {{ progression_label }}{% if last_generated %} — last generated
+    {{ heading }}{% if last_generated %} — last generated
     {{ last_generated.strftime('%b %d, %I:%M %p UTC') }}{% endif %}.
   </p>
 
@@ -34,5 +34,9 @@
       {% endfor %}
     {% endfor %}
   </div>
+</div>
+{% else %}
+<div class="generate-result">
+  <p class="tiny">No playlist generated yet — tap refresh to build one.</p>
 </div>
 {% endif %}

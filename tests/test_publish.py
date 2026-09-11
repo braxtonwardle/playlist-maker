@@ -4,7 +4,12 @@ from random import Random
 from soundtrack_engine.config import Config, Progression, Stage
 from soundtrack_engine.history import PlayHistory
 from soundtrack_engine.models import Track
-from soundtrack_engine.publish import rebuild_progression
+from soundtrack_engine.publish import (
+    UNKNOWN_STAGE_ID,
+    UNKNOWN_STAGE_NAME,
+    current_playlist,
+    rebuild_progression,
+)
 
 NOW = datetime(2026, 1, 15, tzinfo=timezone.utc)
 
@@ -100,3 +105,67 @@ def test_rebuild_progression_favors_less_recently_played_tracks_on_repeat_runs()
     )
 
     assert second_pick_uri != first_pick_uri
+
+
+def test_current_playlist_groups_live_tracks_by_recorded_stage() -> None:
+    config = _config()
+    track_a0, track_a1 = _tracks("a", 5 * 60_000, 5 * 60_000)
+    (track_b0,) = _tracks("b", 5 * 60_000)
+    pools = {"output-1": [track_a0, track_a1, track_b0]}
+    client = FakeSpotifyClient(pools)
+    history = PlayHistory(db_path=":memory:")
+    history.record_generation("morning", "a", [track_a0, track_a1], when=NOW)
+    history.record_generation("morning", "b", [track_b0], when=NOW)
+
+    results = current_playlist("morning", config, client, history)
+
+    assert [(r.stage_id, [t.uri for t in r.tracks]) for r in results] == [
+        ("a", ["spotify:track:a0", "spotify:track:a1"]),
+        ("b", ["spotify:track:b0"]),
+    ]
+
+
+def test_current_playlist_falls_back_to_unknown_for_untracked_tracks() -> None:
+    config = _config()
+    (hand_added,) = _tracks("x", 3 * 60_000)
+    pools = {"output-1": [hand_added]}
+    client = FakeSpotifyClient(pools)
+    history = PlayHistory(db_path=":memory:")  # nothing ever recorded
+
+    results = current_playlist("morning", config, client, history)
+
+    assert len(results) == 1
+    assert results[0].stage_id == UNKNOWN_STAGE_ID
+    assert results[0].stage_name == UNKNOWN_STAGE_NAME
+    assert results[0].tracks == [hand_added]
+
+
+def test_current_playlist_reflects_live_order_even_if_hand_reordered() -> None:
+    config = _config()
+    (track_a,) = _tracks("a", 5 * 60_000)
+    (track_b,) = _tracks("b", 5 * 60_000)
+    # Live order interleaves stages a/b/a — not the contiguous order a generation
+    # would have written, as if someone reordered the playlist by hand in Spotify.
+    pools = {"output-1": [track_a, track_b, track_a]}
+    client = FakeSpotifyClient(pools)
+    history = PlayHistory(db_path=":memory:")
+    history.record_generation("morning", "a", [track_a], when=NOW)
+    history.record_generation("morning", "b", [track_b], when=NOW)
+
+    results = current_playlist("morning", config, client, history)
+
+    assert [r.stage_id for r in results] == ["a", "b", "a"]
+
+
+def test_current_playlist_has_no_side_effects() -> None:
+    config = _config()
+    (track_a,) = _tracks("a", 5 * 60_000)
+    pools = {"output-1": [track_a]}
+    client = FakeSpotifyClient(pools)
+    history = PlayHistory(db_path=":memory:")
+    history.record_generation("morning", "a", [track_a], when=NOW)
+
+    current_playlist("morning", config, client, history)
+
+    assert client.replaced == {}
+    assert history.last_generated_at("morning") == NOW  # unchanged, not bumped

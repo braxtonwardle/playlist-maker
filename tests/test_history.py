@@ -110,6 +110,41 @@ def test_last_generated_at_is_scoped_by_progression() -> None:
     assert history.last_generated_at("morning") is None
 
 
+def test_latest_stage_by_uri_returns_empty_when_never_generated() -> None:
+    history = _history()
+    assert history.latest_stage_by_uri("morning") == {}
+
+
+def test_latest_stage_by_uri_maps_each_track_to_its_stage() -> None:
+    history = _history()
+    track_a = Track(uri="spotify:track:a", duration_ms=200_000)
+    track_b = Track(uri="spotify:track:b", duration_ms=200_000)
+    history.record_generation("morning", "wake", [track_a], when=NOW)
+    history.record_generation("morning", "groove", [track_b], when=NOW)
+
+    assert history.latest_stage_by_uri("morning") == {
+        "spotify:track:a": "wake",
+        "spotify:track:b": "groove",
+    }
+
+
+def test_latest_stage_by_uri_uses_most_recent_stage_if_track_moved() -> None:
+    history = _history()
+    track = Track(uri="spotify:track:a", duration_ms=200_000)
+    history.record_generation("morning", "wake", [track], when=NOW - timedelta(days=1))
+    history.record_generation("morning", "groove", [track], when=NOW)
+
+    assert history.latest_stage_by_uri("morning") == {"spotify:track:a": "groove"}
+
+
+def test_latest_stage_by_uri_is_scoped_by_progression() -> None:
+    history = _history()
+    track = Track(uri="spotify:track:a", duration_ms=200_000)
+    history.record_generation("night", "soft_landing", [track], when=NOW)
+
+    assert history.latest_stage_by_uri("morning") == {}
+
+
 def test_context_manager_closes_connection() -> None:
     with PlayHistory(db_path=":memory:") as history:
         history.record_generation("morning", "wake", [], when=NOW)

@@ -196,10 +196,51 @@ def test_generate_writes_output_playlist_and_shows_track_table(dashboard) -> Non
     response = client.post("/api/generate/morning")
 
     assert response.status_code == 200
+    assert "Generated Ascent" in response.text
     assert "Song W" in response.text
     assert "Artist W" in response.text
     assert "Wake" in response.text  # bucket/stage name column
     assert fake_client.replaced["out-morning"]  # published to Spotify
+
+
+def test_dashboard_page_shows_no_playlist_message_when_never_generated(dashboard) -> None:
+    client, _, _ = dashboard
+    _login(client)
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "No playlist generated yet" in response.text
+
+
+def test_dashboard_page_shows_current_live_playlist(dashboard) -> None:
+    client, _, fake_client = dashboard
+    shared_history = PlayHistory(db_path=":memory:")
+    client.app.dependency_overrides[get_history] = lambda: shared_history
+
+    live_track = Track(uri="spotify:track:w1", duration_ms=15 * 60_000, name="Song W", artists=["Artist W"])
+    fake_client._pools["out-morning"] = [live_track]
+    shared_history.record_generation("morning", "wake", [live_track])
+
+    _login(client)
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "Current Ascent playlist" in response.text
+    assert "Song W" in response.text
+    assert "Wake" in response.text
+
+
+def test_dashboard_page_reports_spotify_failure_without_crashing(dashboard) -> None:
+    client, _, fake_client = dashboard
+    fake_client.fail = True
+    _login(client)
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "load the current Ascent playlist" in response.text  # apostrophe gets HTML-escaped
+    assert "Wake" in response.text  # the rest of the page (stage editor) still renders
 
 
 def test_generate_reports_spotify_failure_without_touching_config(dashboard) -> None:

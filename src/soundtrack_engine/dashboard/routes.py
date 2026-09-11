@@ -30,7 +30,7 @@ from soundtrack_engine.dashboard.dependencies import (
 from soundtrack_engine.dashboard.security import require_auth
 from soundtrack_engine.dashboard.theme import stage_colors_for
 from soundtrack_engine.history import PlayHistory
-from soundtrack_engine.publish import rebuild_progression
+from soundtrack_engine.publish import current_playlist, rebuild_progression
 from soundtrack_engine.spotify_client import SpotifyClient
 
 router = APIRouter()
@@ -102,14 +102,35 @@ def logout() -> RedirectResponse:
     return response
 
 
+def _live_playlist_view(
+    progression: str,
+    progression_label: str,
+    config: Config,
+    client: SpotifyClient,
+    history: PlayHistory,
+) -> dict:
+    """Context for the passive "what's live right now" view shown on page load —
+    a plain read of the output playlist, no picks, no writes, no history changes.
+    """
+    try:
+        results = current_playlist(progression, config, client, history)
+    except (requests.RequestException, RuntimeError) as error:
+        return {"error_message": f"Couldn't load the current {progression_label} playlist: {error}"}
+    return {"results": results, "heading": f"Current {progression_label} playlist"}
+
+
 @router.get("/", response_class=HTMLResponse, dependencies=[Depends(require_auth)])
 def dashboard_page(
     request: Request,
     progression: str = "morning",
     config: Config = Depends(get_config),
+    client: SpotifyClient = Depends(get_spotify_client),
     history: PlayHistory = Depends(get_history),
 ) -> HTMLResponse:
     context = _dashboard_context(request, progression, config, history)
+    context.update(
+        _live_playlist_view(context["progression"], context["progression_label"], config, client, history)
+    )
     return templates.TemplateResponse(request, "dashboard.html", context)
 
 
@@ -183,6 +204,7 @@ def generate(
     if progression not in config.progressions:
         raise HTTPException(status_code=404, detail=f'unknown progression "{progression}"')
 
+    progression_label = _progression_label(progression)
     try:
         results = rebuild_progression(progression, config, client, history)
     except (requests.RequestException, RuntimeError) as error:
@@ -191,11 +213,7 @@ def generate(
         return templates.TemplateResponse(
             request,
             "_generate_result.html",
-            {
-                "error": str(error),
-                "progression": progression,
-                "progression_label": _progression_label(progression),
-            },
+            {"error_message": f"Generate failed for {progression_label}: {error}"},
             status_code=status.HTTP_502_BAD_GATEWAY,
         )
 
@@ -206,8 +224,7 @@ def generate(
         {
             "results": results,
             "stage_colors": stage_colors,
-            "progression": progression,
-            "progression_label": _progression_label(progression),
+            "heading": f"Generated {progression_label}",
             "last_generated": history.last_generated_at(progression),
         },
     )

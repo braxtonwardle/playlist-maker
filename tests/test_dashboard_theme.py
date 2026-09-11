@@ -1,11 +1,16 @@
-from soundtrack_engine.dashboard.theme import STAGE_PALETTE, stage_colors_for
+from soundtrack_engine.dashboard.theme import (
+    STAGE_PALETTE,
+    UNKNOWN_STAGE_COLOR,
+    UNKNOWN_STAGE_ID,
+    stage_colors_for,
+)
 
 
 def test_each_stage_gets_a_distinct_color_up_to_palette_size() -> None:
     colors = stage_colors_for(["a", "b", "c", "d", "e"])
 
-    assert len(set(colors.values())) == 5
-    assert list(colors.keys()) == ["a", "b", "c", "d", "e"]
+    assert len(set(colors[k] for k in ["a", "b", "c", "d", "e"])) == 5
+    assert list(colors.keys())[:5] == ["a", "b", "c", "d", "e"]
 
 
 def test_colors_cycle_when_more_stages_than_palette_entries() -> None:
@@ -21,3 +26,10 @@ def test_same_stage_id_gets_same_color_across_calls() -> None:
     second = stage_colors_for(["wake", "groove"])
 
     assert first == second
+
+
+def test_unknown_stage_always_present_with_neutral_color() -> None:
+    colors = stage_colors_for(["wake"])
+
+    assert colors[UNKNOWN_STAGE_ID] == UNKNOWN_STAGE_COLOR
+    assert UNKNOWN_STAGE_COLOR not in STAGE_PALETTE

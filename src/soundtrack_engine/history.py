@@ -118,6 +118,18 @@ class PlayHistory:
             return None
         return datetime.fromisoformat(row[0])
 
+    def latest_stage_by_uri(self, progression_key: str) -> dict[str, str]:
+        """Map each track uri to the stage it was most recently generated under, for
+        this progression. Spotify's live playlist doesn't carry stage membership
+        itself, so this reattaches it when displaying the playlist that's actually
+        live right now (as opposed to a value just returned by a fresh generation).
+        """
+        rows = self._conn.execute(
+            "SELECT track_uri, stage_id FROM plays WHERE progression_key = ? ORDER BY played_at ASC",
+            (progression_key,),
+        ).fetchall()
+        return dict(rows)  # later rows overwrite earlier ones for the same uri
+
     def close(self) -> None:
         self._conn.close()
 

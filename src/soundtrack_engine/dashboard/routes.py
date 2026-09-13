@@ -5,7 +5,9 @@ dashboard spec — no analytics, no extra screens, just config edit + generate.
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import requests
 import yaml
@@ -45,9 +47,18 @@ templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
 # already-deployed cron commands and reset no-repeat history.
 PROGRESSION_LABELS = {"morning": "Ascent", "night": "Descent"}
 
+# History timestamps are stored (and generated) in UTC; the dashboard is only
+# ever viewed from one place, so displaying them converted to Pacific rather
+# than raw UTC is worth hardcoding instead of adding a settings screen for it.
+_DISPLAY_TZ = ZoneInfo("America/Los_Angeles")
+
 
 def _progression_label(key: str) -> str:
     return PROGRESSION_LABELS.get(key, key.capitalize())
+
+
+def _in_display_tz(when: datetime | None) -> datetime | None:
+    return when.astimezone(_DISPLAY_TZ) if when else None
 
 
 def _dashboard_context(request: Request, progression: str, config: Config, history: PlayHistory) -> dict:
@@ -65,7 +76,7 @@ def _dashboard_context(request: Request, progression: str, config: Config, histo
         "progression_labels": {key: _progression_label(key) for key in config.progressions},
         "stages": stages,
         "stage_colors": stage_colors_for([stage.id for stage in stages]),
-        "last_generated": history.last_generated_at(progression),
+        "last_generated": _in_display_tz(history.last_generated_at(progression)),
     }
 
 
@@ -224,6 +235,6 @@ def generate(
             "results": results,
             "stage_colors": stage_colors,
             "heading": f"Generated {progression_label}",
-            "last_generated": history.last_generated_at(progression),
+            "last_generated": _in_display_tz(history.last_generated_at(progression)),
         },
     )

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -245,6 +246,26 @@ def test_dashboard_page_shows_current_live_playlist(dashboard) -> None:
     assert "Current Ascent playlist" in response.text
     assert "Song W" in response.text
     assert "Wake" in response.text
+
+
+def test_dashboard_page_shows_last_generated_in_pacific_time(dashboard) -> None:
+    client, _, fake_client = dashboard
+    shared_history = PlayHistory(db_path=":memory:")
+    client.app.dependency_overrides[get_history] = lambda: shared_history
+
+    live_track = Track(uri="spotify:track:w1", duration_ms=15 * 60_000, name="Song W", artists=["Artist W"])
+    fake_client._pools["out-morning"] = [live_track]
+    # January: Pacific Standard Time, UTC-8 — 20:30 UTC is noon Pacific.
+    shared_history.record_generation(
+        "morning", "wake", [live_track], when=datetime(2026, 1, 15, 20, 30, tzinfo=timezone.utc)
+    )
+
+    _login(client)
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "Jan 15, 12:30 PM PST" in response.text
+    assert "UTC" not in response.text
 
 
 def test_dashboard_page_reports_spotify_failure_without_crashing(dashboard) -> None:

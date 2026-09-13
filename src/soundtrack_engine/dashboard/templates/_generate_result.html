@@ -6,7 +6,7 @@
 <div class="generate-result">
   <p class="flash success">
     {{ heading }}{% if last_generated %} — last generated
-    {{ last_generated.strftime('%b %d, %I:%M %p UTC') }}{% endif %}.
+    {{ last_generated.strftime('%b %d, %I:%M %p %Z') }}{% endif %}.
   </p>
 
   <div class="stage-legend">

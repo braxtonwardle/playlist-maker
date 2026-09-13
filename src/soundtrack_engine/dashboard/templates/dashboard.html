@@ -4,7 +4,7 @@
   <header class="app-header">
     <div>
       <h1 class="app-title">Playlist Dashboard</h1>
-      <p class="app-sub">Last generated: {{ last_generated.strftime('%b %d, %I:%M %p UTC') if last_generated else 'never' }}</p>
+      <p class="app-sub">Last generated: {{ last_generated.strftime('%b %d, %I:%M %p %Z') if last_generated else 'never' }}</p>
     </div>
     <form method="post" action="/logout" class="logout-form"><button type="submit">Log out</button></form>
   </header>

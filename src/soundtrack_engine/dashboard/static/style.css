@@ -113,9 +113,22 @@ body {
 .slider-row { display: flex; align-items: center; gap: 10px; }
 .slider-row.disabled { opacity: .4; }
 
+.slider-track-wrap { position: relative; flex: 1; display: flex; align-items: center; }
+
 input[type="range"] {
-  flex: 1; -webkit-appearance: none; appearance: none; height: 8px; border-radius: 4px;
+  width: 100%; -webkit-appearance: none; appearance: none; height: 8px; border-radius: 4px;
   background: var(--line2); outline: none;
+}
+
+/* Faded marker at the last-saved value while the slider's been moved away from
+   it — a plain percentage of the track width, so it's a hair off-center at the
+   very ends of the range where the native thumb itself narrows in from the
+   edge, but close enough to read as "you moved this" at a glance. */
+.ghost-dot {
+  position: absolute; top: 50%; transform: translate(-50%, -50%);
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--stage-color, var(--muted2)); opacity: .55;
+  pointer-events: none;
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%;

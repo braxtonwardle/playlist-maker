@@ -6,7 +6,12 @@
     {% for stage in stages %}
     <div class="stage-card"
          style="--stage-color: {{ stage_colors[stage.id] }}"
-         x-data="{ infinite: {{ 'true' if stage.open_ended else 'false' }}, minutes: {{ stage.target_minutes or 15 }} }">
+         x-data="{
+           infinite: {{ 'true' if stage.open_ended else 'false' }},
+           minutes: {{ stage.target_minutes or 15 }},
+           savedMinutes: {{ stage.target_minutes or 15 }},
+           min: 1, max: 60,
+         }">
       <div class="stage-card-header">
         <span class="stage-name">{{ stage.name }}</span>
         {% if loop.first or loop.last %}
@@ -17,10 +22,15 @@
         {% endif %}
       </div>
       <div class="slider-row" :class="{ disabled: infinite }">
-        <input type="range" min="1" max="60" step="1"
-               name="minutes__{{ stage.id }}"
-               x-model.number="minutes"
-               :disabled="infinite">
+        <div class="slider-track-wrap">
+          <input type="range" :min="min" :max="max" step="1"
+                 name="minutes__{{ stage.id }}"
+                 x-model.number="minutes"
+                 :disabled="infinite">
+          <span class="ghost-dot" x-show="!infinite && minutes !== savedMinutes" x-cloak
+                :style="`left: ${(savedMinutes - min) / (max - min) * 100}%`"
+                title="Saved value"></span>
+        </div>
         <span class="minutes-readout" x-text="infinite ? '—' : minutes + ' min'"></span>
       </div>
     </div>

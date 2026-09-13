@@ -88,6 +88,38 @@ def test_record_generation_covers_multiple_tracks() -> None:
     assert weights == [pytest.approx(0.01, abs=1e-9), pytest.approx(0.01, abs=1e-9)]
 
 
+def test_same_day_regeneration_replaces_rather_than_stacks() -> None:
+    history = _history()
+    morning_track = Track(uri="spotify:track:1", duration_ms=200_000)
+    afternoon_track = Track(uri="spotify:track:2", duration_ms=200_000)
+    history.record_generation(
+        "morning", "wake", [morning_track], when=NOW.replace(hour=6)
+    )
+    # Regenerated again later the same day (e.g. tapping refresh from the dashboard) —
+    # the earlier track from this morning shouldn't still count as "played today".
+    history.record_generation(
+        "morning", "wake", [afternoon_track], when=NOW.replace(hour=14)
+    )
+
+    weights = history.weights_for(
+        "morning", "wake", [morning_track, afternoon_track], no_repeat_days=15, now=NOW.replace(hour=15)
+    )
+
+    assert weights[0] == 1.0
+    assert weights[1] < 0.02  # generated an hour ago — near the minimum weight
+
+
+def test_regeneration_on_a_later_day_does_not_erase_earlier_days() -> None:
+    history = _history()
+    track = Track(uri="spotify:track:1", duration_ms=200_000)
+    history.record_generation("morning", "wake", [track], when=NOW - timedelta(days=1))
+    history.record_generation("morning", "wake", [track], when=NOW)
+
+    weights = history.weights_for("morning", "wake", [track], no_repeat_days=15, now=NOW)
+
+    assert weights[0] == pytest.approx(0.01, abs=1e-9)
+
+
 def test_last_generated_at_returns_none_when_never_generated() -> None:
     history = _history()
     assert history.last_generated_at("morning") is None

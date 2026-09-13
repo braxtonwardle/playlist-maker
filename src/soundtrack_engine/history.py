@@ -57,8 +57,20 @@ class PlayHistory:
         tracks: list[Track],
         when: datetime | None = None,
     ) -> None:
-        """Record that `tracks` were just selected for this progression/stage."""
-        played_at = (when or datetime.now(timezone.utc)).isoformat()
+        """Record that `tracks` were just selected for this progression/stage. Any
+        earlier record for this same progression/stage on the same calendar day is
+        replaced rather than added to — regenerating from the dashboard multiple
+        times in one day (e.g. while tweaking a stage) should count as one "played
+        today" for no-repeat purposes, not one per tap, which would otherwise
+        suppress every track from every regeneration for the next no_repeat_days.
+        """
+        when = when or datetime.now(timezone.utc)
+        played_at = when.isoformat()
+        day = when.date().isoformat()
+        self._conn.execute(
+            "DELETE FROM plays WHERE progression_key = ? AND stage_id = ? AND date(played_at) = ?",
+            (progression_key, stage_id, day),
+        )
         self._conn.executemany(
             "INSERT INTO plays (progression_key, stage_id, track_uri, played_at) "
             "VALUES (?, ?, ?, ?)",

@@ -121,6 +121,20 @@ needed on the server at all — deployment uses [`deploy.sh`](deploy.sh), which 
 tarball of `main` straight from GitHub over plain HTTPS (`curl`/`tar`/`cp` only) rather
 than `git clone`.
 
+**`dnf-makecache.timer` hits the same issue on its own schedule — disable it.** Oracle
+Linux 9 ships this systemd timer enabled by default; it periodically runs `dnf` in the
+background purely to refresh package metadata, with nobody watching. On this instance it
+triggered the identical swap-thrashing/OOM pattern as above (confirmed via
+`journalctl -k`: `Out of memory: Killed process ... (dnf)`, `task_memcg=/system.slice/
+dnf-makecache.service`) — the box was unresponsive for roughly 35–40 minutes before the
+kernel's OOM killer finally ended it and things recovered on their own. Since this
+project never runs `dnf install` at all (see above), there's no reason to ever refresh
+its cache here — disable the timer once and forget it:
+
+```
+sudo systemctl disable --now dnf-makecache.timer
+```
+
 **Auto-deploy before every scheduled run.** `deploy.sh` is chained in front of both cron
 entries, so any commit to `main` — from a laptop, from GitHub's web UI, wherever — is
 live by the next scheduled generation, with no manual redeploy step:

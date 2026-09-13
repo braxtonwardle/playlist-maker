@@ -116,7 +116,11 @@ body {
 .slider-track-wrap { position: relative; flex: 1; display: flex; align-items: center; }
 
 input[type="range"] {
-  width: 100%; -webkit-appearance: none; appearance: none; height: 8px; border-radius: 4px;
+  /* flex: 1 (not width: 100%) deliberately — Safari has a long-standing bug
+     resolving percentage widths against a flex parent whose own basis is 0%
+     (which the "flex: 1" shorthand on .slider-track-wrap sets), rendering
+     this at roughly half width on iOS. flex-grow doesn't hit that. */
+  flex: 1; -webkit-appearance: none; appearance: none; height: 8px; border-radius: 4px;
   background: var(--line2); outline: none;
 }
 

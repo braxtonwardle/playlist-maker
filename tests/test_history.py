@@ -142,39 +142,54 @@ def test_last_generated_at_is_scoped_by_progression() -> None:
     assert history.last_generated_at("morning") is None
 
 
-def test_latest_stage_by_uri_returns_empty_when_never_generated() -> None:
+def test_latest_run_stage_sequence_returns_empty_when_never_generated() -> None:
     history = _history()
-    assert history.latest_stage_by_uri("morning") == {}
+    assert history.latest_run_stage_sequence("morning") == []
 
 
-def test_latest_stage_by_uri_maps_each_track_to_its_stage() -> None:
+def test_latest_run_stage_sequence_returns_pairs_in_write_order() -> None:
     history = _history()
     track_a = Track(uri="spotify:track:a", duration_ms=200_000)
     track_b = Track(uri="spotify:track:b", duration_ms=200_000)
     history.record_generation("morning", "wake", [track_a], when=NOW)
     history.record_generation("morning", "groove", [track_b], when=NOW)
 
-    assert history.latest_stage_by_uri("morning") == {
-        "spotify:track:a": "wake",
-        "spotify:track:b": "groove",
-    }
+    assert history.latest_run_stage_sequence("morning") == [
+        ("spotify:track:a", "wake"),
+        ("spotify:track:b", "groove"),
+    ]
 
 
-def test_latest_stage_by_uri_uses_most_recent_stage_if_track_moved() -> None:
+def test_latest_run_stage_sequence_only_includes_the_most_recent_run() -> None:
     history = _history()
     track = Track(uri="spotify:track:a", duration_ms=200_000)
     history.record_generation("morning", "wake", [track], when=NOW - timedelta(days=1))
     history.record_generation("morning", "groove", [track], when=NOW)
 
-    assert history.latest_stage_by_uri("morning") == {"spotify:track:a": "groove"}
+    # Yesterday's "wake" run is excluded entirely, not just overwritten.
+    assert history.latest_run_stage_sequence("morning") == [("spotify:track:a", "groove")]
 
 
-def test_latest_stage_by_uri_is_scoped_by_progression() -> None:
+def test_latest_run_stage_sequence_includes_a_track_picked_by_two_stages_in_one_run() -> None:
+    history = _history()
+    track = Track(uri="spotify:track:a", duration_ms=200_000)
+    # Same run, same timestamp — a song briefly present in both stages' pools at
+    # once, picked independently by each.
+    history.record_generation("morning", "wake", [track], when=NOW)
+    history.record_generation("morning", "groove", [track], when=NOW)
+
+    assert history.latest_run_stage_sequence("morning") == [
+        ("spotify:track:a", "wake"),
+        ("spotify:track:a", "groove"),
+    ]
+
+
+def test_latest_run_stage_sequence_is_scoped_by_progression() -> None:
     history = _history()
     track = Track(uri="spotify:track:a", duration_ms=200_000)
     history.record_generation("night", "soft_landing", [track], when=NOW)
 
-    assert history.latest_stage_by_uri("morning") == {}
+    assert history.latest_run_stage_sequence("morning") == []
 
 
 def test_context_manager_closes_connection() -> None:

@@ -157,6 +157,25 @@ def test_current_playlist_reflects_live_order_even_if_hand_reordered() -> None:
     assert [r.stage_id for r in results] == ["a", "b", "a"]
 
 
+def test_current_playlist_splits_a_track_picked_by_two_stages_in_the_same_run() -> None:
+    # A song briefly present in both stages' source playlists at once (e.g. an
+    # earlier stage and the open-ended final stage) gets picked and recorded by
+    # both in the same run, so it's physically live twice — once per stage. A
+    # naive uri-keyed lookup can't tell the two copies apart and would mislabel
+    # one of them; this should split them correctly by position instead.
+    config = _config()
+    (shared_track,) = _tracks("shared", 5 * 60_000)
+    pools = {"output-1": [shared_track, shared_track]}
+    client = FakeSpotifyClient(pools)
+    history = PlayHistory(db_path=":memory:")
+    history.record_generation("morning", "a", [shared_track], when=NOW)
+    history.record_generation("morning", "b", [shared_track], when=NOW)
+
+    results = current_playlist("morning", config, client, history)
+
+    assert [r.stage_id for r in results] == ["a", "b"]
+
+
 def test_current_playlist_has_no_side_effects() -> None:
     config = _config()
     (track_a,) = _tracks("a", 5 * 60_000)

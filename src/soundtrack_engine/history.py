@@ -130,17 +130,30 @@ class PlayHistory:
             return None
         return datetime.fromisoformat(row[0])
 
-    def latest_stage_by_uri(self, progression_key: str) -> dict[str, str]:
-        """Map each track uri to the stage it was most recently generated under, for
-        this progression. Spotify's live playlist doesn't carry stage membership
-        itself, so this reattaches it when displaying the playlist that's actually
-        live right now (as opposed to a value just returned by a fresh generation).
+    def latest_run_stage_sequence(self, progression_key: str) -> list[tuple[str, str]]:
+        """Return (track_uri, stage_id) pairs recorded by the most recent generation
+        run for this progression, in the order they were written. A run's stages
+        all share one `played_at` (rebuild_progression computes it once up front),
+        so this only ever spans a single generation, never accumulating across
+        days. A song picked by two different stages in that one run — e.g. briefly
+        present in both an open-ended stage's pool and an earlier stage's, before
+        being removed from one — appears twice here, once per stage: callers
+        should consume this positionally against the live playlist rather than
+        collapsing it into a uri-keyed dict, so each physical occurrence gets
+        matched to the stage that actually picked it.
         """
+        row = self._conn.execute(
+            "SELECT MAX(played_at) FROM plays WHERE progression_key = ?", (progression_key,)
+        ).fetchone()
+        if row is None or row[0] is None:
+            return []
+        latest_played_at = row[0]
         rows = self._conn.execute(
-            "SELECT track_uri, stage_id FROM plays WHERE progression_key = ? ORDER BY played_at ASC",
-            (progression_key,),
+            "SELECT track_uri, stage_id FROM plays WHERE progression_key = ? AND played_at = ? "
+            "ORDER BY id ASC",
+            (progression_key, latest_played_at),
         ).fetchall()
-        return dict(rows)  # later rows overwrite earlier ones for the same uri
+        return [(uri, stage_id) for uri, stage_id in rows]
 
     def close(self) -> None:
         self._conn.close()

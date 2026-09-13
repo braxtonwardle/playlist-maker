@@ -50,22 +50,19 @@ def _progression_label(key: str) -> str:
     return PROGRESSION_LABELS.get(key, key.capitalize())
 
 
-def _other_progression(config: Config, progression: str) -> str | None:
-    others = [key for key in config.progressions if key != progression]
-    return others[0] if others else None
-
-
 def _dashboard_context(request: Request, progression: str, config: Config, history: PlayHistory) -> dict:
     if progression not in config.progressions:
         progression = next(iter(config.progressions))
-    other_progression = _other_progression(config, progression)
     stages = config.progressions[progression].stages
     return {
         "request": request,
         "progression": progression,
         "progression_label": _progression_label(progression),
-        "other_progression": other_progression,
-        "other_progression_label": _progression_label(other_progression) if other_progression else None,
+        # Fixed, config-file order (Ascent/morning always first) regardless of
+        # which one is currently active — only the `active` class on each link
+        # should move, never the links themselves.
+        "progression_keys": list(config.progressions),
+        "progression_labels": {key: _progression_label(key) for key in config.progressions},
         "stages": stages,
         "stage_colors": stage_colors_for([stage.id for stage in stages]),
         "last_generated": history.last_generated_at(progression),

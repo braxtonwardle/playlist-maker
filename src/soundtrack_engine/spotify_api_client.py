@@ -93,6 +93,15 @@ class SpotifyApiClient:
         response.raise_for_status()
         return response.json()["name"]
 
+    def rename_playlist(self, playlist_id: str, name: str) -> None:
+        response = requests.put(
+            f"{API_BASE}/playlists/{playlist_id}",
+            headers=self._headers(),
+            json={"name": name},
+            timeout=10,
+        )
+        response.raise_for_status()
+
     def create_playlist(
         self, user_id: str, name: str, description: str = "", public: bool = False
     ) -> str:

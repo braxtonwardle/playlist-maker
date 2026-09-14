@@ -25,14 +25,14 @@ progressions:
         name: "Wake"
         source_playlist_id: ""
         target_minutes: 15
-      - id: groove
-        name: "Groove"
-        source_playlist_id: ""
-        target_minutes: 11
       - id: warm
         name: "Warm-up"
         source_playlist_id: ""
         target_minutes: 12
+      - id: groove
+        name: "Groove"
+        source_playlist_id: ""
+        target_minutes: 11
       - id: building_energy
         name: "Building"
         source_playlist_id: ""

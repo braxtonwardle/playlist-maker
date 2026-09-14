@@ -123,3 +123,17 @@ def test_get_playlist_name_returns_name() -> None:
 
     with patch("soundtrack_engine.spotify_api_client.requests.get", return_value=response):
         assert _client().get_playlist_name("playlist123") == "Wake / Cinematic"
+
+
+def test_rename_playlist_sends_new_name() -> None:
+    response = MagicMock()
+    response.raise_for_status.return_value = None
+
+    with patch(
+        "soundtrack_engine.spotify_api_client.requests.put", return_value=response
+    ) as mock_put:
+        _client().rename_playlist("playlist123", "2. Warm-up")
+
+    mock_put.assert_called_once()
+    assert mock_put.call_args.args[0] == "https://api.spotify.com/v1/playlists/playlist123"
+    assert mock_put.call_args.kwargs["json"] == {"name": "2. Warm-up"}

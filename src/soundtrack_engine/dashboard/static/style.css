@@ -188,6 +188,11 @@ input[type="range"]::-moz-range-thumb {
 .track-bucket { color: var(--stage-color, var(--muted2)); font-size: 10.5px; font-weight: 600; }
 .track-duration { color: var(--muted2); font-size: 11px; font-variant-numeric: tabular-nums; }
 
+.playlist-summary {
+  color: var(--muted2); font-size: 11px; text-align: center; margin: 12px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
 .stage-legend { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 10px; }
 .stage-legend-item { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--muted); }
 .stage-legend-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--stage-color, var(--muted2)); flex: none; }

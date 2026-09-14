@@ -33,6 +33,7 @@ from soundtrack_engine.dashboard.dependencies import (
 from soundtrack_engine.dashboard.security import require_auth
 from soundtrack_engine.dashboard.theme import stage_colors_for
 from soundtrack_engine.history import PlayHistory
+from soundtrack_engine.models import StageResult
 from soundtrack_engine.publish import current_playlist, rebuild_progression
 from soundtrack_engine.spotify_client import SpotifyClient
 
@@ -59,6 +60,18 @@ def _progression_label(key: str) -> str:
 
 def _in_display_tz(when: datetime | None) -> datetime | None:
     return when.astimezone(_DISPLAY_TZ) if when else None
+
+
+def _playlist_summary(results: list[StageResult]) -> str:
+    """"N songs · H hr M min" (or just "M min" under an hour) across every stage's
+    tracks — shown under a track list so the total is visible without counting.
+    """
+    tracks = [track for result in results for track in result.tracks]
+    total_minutes = sum(track.duration_ms for track in tracks) // 60_000
+    hours, minutes = divmod(total_minutes, 60)
+    duration = f"{hours} hr {minutes} min" if hours else f"{minutes} min"
+    track_word = "song" if len(tracks) == 1 else "songs"
+    return f"{len(tracks)} {track_word} · {duration}"
 
 
 def _dashboard_context(request: Request, progression: str, config: Config, history: PlayHistory) -> dict:
@@ -125,7 +138,11 @@ def _live_playlist_view(
         results = current_playlist(progression, config, client, history)
     except (requests.RequestException, RuntimeError) as error:
         return {"error_message": f"Couldn't load the current {progression_label} playlist: {error}"}
-    return {"results": results, "heading": f"Current {progression_label} playlist"}
+    return {
+        "results": results,
+        "heading": f"Current {progression_label} playlist",
+        "summary": _playlist_summary(results),
+    }
 
 
 @router.get("/", response_class=HTMLResponse, dependencies=[Depends(require_auth)])
@@ -236,5 +253,6 @@ def generate(
             "stage_colors": stage_colors,
             "heading": f"Generated {progression_label}",
             "last_generated": _in_display_tz(history.last_generated_at(progression)),
+            "summary": _playlist_summary(results),
         },
     )

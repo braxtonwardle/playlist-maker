@@ -32,15 +32,15 @@ def test_example_config_stage_ids_and_names_in_order() -> None:
     morning_stages = config.progressions["morning"].stages
     assert [s.id for s in morning_stages] == [
         "wake_cinematic",
-        "groove",
         "warm",
+        "groove",
         "building_energy",
         "full_send_fun",
     ]
     assert [s.name for s in morning_stages] == [
         "Wake",
-        "Groove",
         "Warm-up",
+        "Groove",
         "Building",
         "Full Send",
     ]

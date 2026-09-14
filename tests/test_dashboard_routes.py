@@ -217,6 +217,7 @@ def test_generate_writes_output_playlist_and_shows_track_table(dashboard) -> Non
     assert "Song W" in response.text
     assert "Artist W" in response.text
     assert "Wake" in response.text  # bucket/stage name column
+    assert "3 songs · 29 min" in response.text  # 15 + 11 + 3 min across all stages
     assert fake_client.replaced["out-morning"]  # published to Spotify
 
 
@@ -246,6 +247,7 @@ def test_dashboard_page_shows_current_live_playlist(dashboard) -> None:
     assert "Current Ascent playlist" in response.text
     assert "Song W" in response.text
     assert "Wake" in response.text
+    assert "1 song · 15 min" in response.text  # singular "song", no leftover hour
 
 
 def test_dashboard_page_shows_last_generated_in_pacific_time(dashboard) -> None:

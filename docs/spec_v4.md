@@ -61,8 +61,8 @@ stable output playlists such as "Today's Morning" and "Tonight's Wind Down".
 ### Morning (~60 min total, builds toward the back half)
 
 1. Wake / Cinematic — 8 min
-2. Groove — 11 min
-3. Warm — 12 min
+2. Warm — 12 min
+3. Groove — 11 min
 4. Building energy — 14 min
 5. Full send / Fun — 15 min
 
@@ -102,11 +102,11 @@ not a verified fit. These are reference material only — config never lists son
 1. **Wake / Cinematic** — Time (Hans Zimmer), Day One (Hans Zimmer), Albatross
    (Fleetwood Mac), Cornfield Chase (Hans Zimmer), Mountains (Hans Zimmer), Motion
    Picture Soundtrack (Radiohead)
-2. **Groove / Getting moving** — Dean Town (Vulfpeck), Back Pocket (Vulfpeck), 1612
+2. **Warm / Easy** — Dreams (Fleetwood Mac), Reckoner (Radiohead), The Chain (Fleetwood
+   Mac), Olivia Dean tracks (Messy, No Man, Dive), Work Song (Hozier)
+3. **Groove / Getting moving** — Dean Town (Vulfpeck), Back Pocket (Vulfpeck), 1612
    (Vulfpeck), Khruangbin tracks (e.g. Maria También, Friday Morning), Cómo Se Siente
    (Rosalía)
-3. **Warm / Easy** — Dreams (Fleetwood Mac), Reckoner (Radiohead), The Chain (Fleetwood
-   Mac), Olivia Dean tracks (Messy, No Man, Dive), Work Song (Hozier)
 4. **Building energy** — Freedom (Pharrell), Get Lucky (Daft Punk), Instant Crush (Daft
    Punk), Jungle tracks (Busy Earnin', Happy Man), Redbone (Childish Gambino), Feels Like
    Summer (Childish Gambino)

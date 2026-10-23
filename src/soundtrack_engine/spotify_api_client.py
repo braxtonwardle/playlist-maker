@@ -60,20 +60,38 @@ class SpotifyApiClient:
         return tracks
 
     def replace_playlist_tracks(self, playlist_id: str, track_uris: list[str]) -> None:
-        """Overwrite the given playlist's contents with this ordered list of URIs."""
-        if len(track_uris) > MAX_TRACKS_PER_REPLACE_REQUEST:
-            raise ValueError(
-                f"got {len(track_uris)} track URIs; replace_playlist_tracks only supports "
-                f"up to {MAX_TRACKS_PER_REPLACE_REQUEST} in a single call"
-            )
+        """Overwrite the given playlist's contents with this ordered list of URIs.
+
+        Spotify's endpoint only accepts up to MAX_TRACKS_PER_REPLACE_REQUEST URIs
+        per call, so once an open-ended stage's pool (or a progression's combined
+        picks) outgrows that, this chunks the write: the first chunk REPLACES the
+        playlist's entire contents (clearing anything beyond it), and any further
+        chunks are APPENDED in order — the only way the API allows writing more
+        tracks than fit in one call.
+        """
+        chunks = [
+            track_uris[i : i + MAX_TRACKS_PER_REPLACE_REQUEST]
+            for i in range(0, len(track_uris), MAX_TRACKS_PER_REPLACE_REQUEST)
+        ] or [[]]  # an empty track list still needs one PUT, to clear the playlist
+
+        first_chunk, *remaining_chunks = chunks
 
         response = requests.put(
             f"{API_BASE}/playlists/{playlist_id}/items",
             headers=self._headers(),
-            json={"uris": track_uris},
+            json={"uris": first_chunk},
             timeout=10,
         )
         response.raise_for_status()
+
+        for chunk in remaining_chunks:
+            response = requests.post(
+                f"{API_BASE}/playlists/{playlist_id}/items",
+                headers=self._headers(),
+                json={"uris": chunk},
+                timeout=10,
+            )
+            response.raise_for_status()
 
     # --- One-time setup helpers, not part of the SpotifyClient protocol: the ---
     # --- generator/history/publishing phases never need to create a playlist. ---

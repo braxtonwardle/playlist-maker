@@ -1,7 +1,5 @@
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from soundtrack_engine.models import Track
 from soundtrack_engine.spotify_api_client import MAX_TRACKS_PER_REPLACE_REQUEST, SpotifyApiClient
 
@@ -80,11 +78,50 @@ def test_replace_playlist_tracks_sends_uris_as_json() -> None:
     }
 
 
-def test_replace_playlist_tracks_rejects_too_many_uris() -> None:
-    too_many = [f"spotify:track:{i}" for i in range(MAX_TRACKS_PER_REPLACE_REQUEST + 1)]
+def test_replace_playlist_tracks_chunks_beyond_the_single_call_limit() -> None:
+    # 1 over two full chunks: PUT replaces the first 100, POST appends the next
+    # 100, POST appends the last 1 — proving a pool bigger than one call's limit
+    # (e.g. a heavily-curated open-ended stage) still gets written in full rather
+    # than raising.
+    total = MAX_TRACKS_PER_REPLACE_REQUEST * 2 + 1
+    uris = [f"spotify:track:{i}" for i in range(total)]
+    response = MagicMock()
+    response.raise_for_status.return_value = None
 
-    with pytest.raises(ValueError):
-        _client().replace_playlist_tracks("playlist123", too_many)
+    with (
+        patch(
+            "soundtrack_engine.spotify_api_client.requests.put", return_value=response
+        ) as mock_put,
+        patch(
+            "soundtrack_engine.spotify_api_client.requests.post", return_value=response
+        ) as mock_post,
+    ):
+        _client().replace_playlist_tracks("playlist123", uris)
+
+    mock_put.assert_called_once()
+    assert mock_put.call_args.kwargs["json"] == {
+        "uris": uris[:MAX_TRACKS_PER_REPLACE_REQUEST]
+    }
+    assert mock_post.call_count == 2
+    assert mock_post.call_args_list[0].kwargs["json"] == {
+        "uris": uris[MAX_TRACKS_PER_REPLACE_REQUEST : MAX_TRACKS_PER_REPLACE_REQUEST * 2]
+    }
+    assert mock_post.call_args_list[1].kwargs["json"] == {
+        "uris": uris[MAX_TRACKS_PER_REPLACE_REQUEST * 2 :]
+    }
+
+
+def test_replace_playlist_tracks_sends_one_put_for_an_empty_list() -> None:
+    response = MagicMock()
+    response.raise_for_status.return_value = None
+
+    with patch(
+        "soundtrack_engine.spotify_api_client.requests.put", return_value=response
+    ) as mock_put:
+        _client().replace_playlist_tracks("playlist123", [])
+
+    mock_put.assert_called_once()
+    assert mock_put.call_args.kwargs["json"] == {"uris": []}
 
 
 def test_get_current_user_id_returns_id() -> None:

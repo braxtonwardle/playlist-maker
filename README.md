@@ -135,13 +135,18 @@ its cache here — disable the timer once and forget it:
 sudo systemctl disable --now dnf-makecache.timer
 ```
 
-**Auto-deploy before every scheduled run.** `deploy.sh` is chained in front of both cron
-entries, so any commit to `main` — from a laptop, from GitHub's web UI, wherever — is
-live by the next scheduled generation, with no manual redeploy step:
+**Auto-deploy before every scheduled run — but never let it block generation.**
+`deploy.sh` runs in front of both cron entries, so any commit to `main` — from a laptop,
+from GitHub's web UI, wherever — is live by the next scheduled generation, with no manual
+redeploy step. Critically, the two commands are joined with `;`, not `&&`: a transient
+failure fetching from GitHub (a timeout, a 502/503/504 — it happens) must never silently
+skip that night's `generate` entirely just because the unrelated auto-update step had a
+bad moment. `deploy.sh` also retries its own fetch a few times before giving up, so this
+is now a belt-and-suspenders situation rather than depending on either alone:
 
 ```
-0 3 * * * /opt/playlist-maker/deploy.sh >> /opt/playlist-maker/deploy.log 2>&1 && /opt/playlist-maker/.venv/bin/soundtrack-engine generate morning >> /opt/playlist-maker/generate.log 2>&1
-5 3 * * * /opt/playlist-maker/deploy.sh >> /opt/playlist-maker/deploy.log 2>&1 && /opt/playlist-maker/.venv/bin/soundtrack-engine generate night >> /opt/playlist-maker/generate.log 2>&1
+0 3 * * * /opt/playlist-maker/deploy.sh >> /opt/playlist-maker/deploy.log 2>&1 ; /opt/playlist-maker/.venv/bin/soundtrack-engine generate morning >> /opt/playlist-maker/generate.log 2>&1
+5 3 * * * /opt/playlist-maker/deploy.sh >> /opt/playlist-maker/deploy.log 2>&1 ; /opt/playlist-maker/.venv/bin/soundtrack-engine generate night >> /opt/playlist-maker/generate.log 2>&1
 ```
 
 (swap `/opt/playlist-maker` for the actual deploy path). `deploy.sh` never deletes files

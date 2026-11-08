@@ -25,7 +25,7 @@ trap 'rm -rf "$WORK_DIR"' EXIT
 
 TARBALL_URL="https://github.com/${REPO}/archive/refs/heads/${BRANCH}.tar.gz"
 
-curl_args=(-fsSL)
+curl_args=(-fsSL --retry 3 --retry-delay 2 --retry-connrefused)
 if [[ -n "${GITHUB_TOKEN:-}" ]]; then
   curl_args+=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
 fi

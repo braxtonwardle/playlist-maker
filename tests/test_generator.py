@@ -126,3 +126,19 @@ def test_generate_stage_open_ended_avoids_adjacent_same_artist_when_feasible() -
 
     assert {t.uri for t in result} == {t.uri for t in pool}
     assert _adjacent_same_artist_count(result) == 0
+
+
+def test_generate_stage_open_ended_leading_artist_varies_across_days() -> None:
+    # "A" has the most tracks in the pool. The old behavior (reusing
+    # _diversify_by_artist) always placed the most-represented artist first, so this
+    # stage opened with the same artist every single day. The fix should make every
+    # track's odds of leading roughly proportional to its share of the pool instead.
+    pool = _tracks_with_artists("A", "A", "A", "A", "B", "B", "C", "C", "D", "D")
+    stage = Stage(id="full_send", name="Full Send", open_ended=True)
+
+    leading_artists = {
+        generate_stage(stage, pool, tolerance_minutes=2, rng=random.Random(seed))[0].artist_id
+        for seed in range(30)
+    }
+
+    assert len(leading_artists) > 1

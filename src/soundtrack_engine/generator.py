@@ -11,6 +11,10 @@ Whichever tracks get picked, their order within a stage is then spread out by
 primary artist (`_diversify_by_artist`) so a pool with several songs by the same
 artist doesn't cluster them back-to-back — this only reorders a stage's own picks,
 never moves a track across a stage boundary, so the mood-arc ordering stays intact.
+Open-ended stages (the whole pool, no duration target) use a separate shuffle
+(`_shuffle_open_ended_pool`) instead: since the whole pool plays every day, not just
+a randomized subset, `_diversify_by_artist`'s deterministic "most-represented artist
+leads" ordering would mean the same artist opens that stage every single day.
 """
 
 from __future__ import annotations
@@ -147,6 +151,40 @@ def generate_stage_tracks(
     return _diversify_by_artist(selected, rng)
 
 
+def _shuffle_open_ended_pool(tracks: list[Track], rng: random.Random) -> list[Track]:
+    """Order an open-ended stage's *entire* pool for one day's playback.
+
+    `_diversify_by_artist` always places the most-represented artist first (that's
+    how it keeps that artist spread out across an already-randomized subset) — fine
+    for the duration-targeted stages, where which tracks even made it into the
+    selection already varies day to day. An open-ended stage plays its whole pool
+    every day, though, so that same deterministic ordering means whichever artist
+    has the most tracks in the pool leads the stage every single day, with no
+    variation at all. This does a genuine uniform shuffle instead — every track has
+    an equal chance of leading, proportional to how much of the pool it actually
+    makes up — then a best-effort repair pass that swaps any same-artist tracks
+    that land next to each other by chance into a later, safe-looking slot. It
+    isn't guaranteed optimal (unlike `_diversify_by_artist`'s stricter guarantee),
+    but it trades a little of that for actually varying who comes first.
+    """
+    result = list(tracks)
+    rng.shuffle(result)
+
+    for i in range(1, len(result)):
+        if result[i].artist_id != result[i - 1].artist_id:
+            continue
+        for j in range(i + 1, len(result)):
+            candidate = result[j]
+            if candidate.artist_id == result[i - 1].artist_id:
+                continue
+            if i + 1 < len(result) and j != i + 1 and candidate.artist_id == result[i + 1].artist_id:
+                continue
+            result[i], result[j] = result[j], result[i]
+            break
+
+    return result
+
+
 def generate_stage(
     stage: Stage,
     pool: list[Track],
@@ -161,7 +199,7 @@ def generate_stage(
         rng = random.Random()
 
     if stage.open_ended:
-        return _diversify_by_artist(list(pool), rng)
+        return _shuffle_open_ended_pool(pool, rng)
 
     assert stage.target_minutes is not None  # guaranteed by Stage's own validation
     return generate_stage_tracks(pool, stage.target_minutes, tolerance_minutes, weights, rng)
